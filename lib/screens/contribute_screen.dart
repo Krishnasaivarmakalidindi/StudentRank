@@ -10,6 +10,7 @@ import 'package:studentrank/models/activity.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/resource_service.dart';
 import 'package:studentrank/services/activity_service.dart';
+import 'package:studentrank/services/validation_service.dart';
 import 'package:studentrank/theme.dart';
 import 'package:studentrank/services/storage_service.dart';
 import 'package:studentrank/nav.dart';
@@ -26,7 +27,6 @@ class _ContributeScreenState extends State<ContributeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _subjectController = TextEditingController();
   final _textContentController = TextEditingController();
   final _linkController = TextEditingController();
   
@@ -36,18 +36,24 @@ class _ContributeScreenState extends State<ContributeScreen> {
   
   ResourceType _selectedType = ResourceType.notes;
   bool _isSubmitting = false;
+  String? _selectedSubject;
   
   // Content State
   final List<UploadedItem> _uploadedItems = [];
   bool _showTextInput = false;
   bool _showLinkInput = false;
 
+  final List<String> _subjects = [
+    'Computer Science', 'Mathematics', 'Physics', 'Chemistry', 
+    'Electrical Engineering', 'Mechanical Engineering', 'Biology',
+    'Economics', 'History', 'Literature', 'Other'
+  ];
+
   @override
   void initState() {
     super.initState();
     _titleController.addListener(_updateState);
     _descriptionController.addListener(_updateState);
-    _subjectController.addListener(_updateState);
   }
 
   void _updateState() {
@@ -58,7 +64,6 @@ class _ContributeScreenState extends State<ContributeScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _subjectController.dispose();
     _textContentController.dispose();
     _linkController.dispose();
     super.dispose();
@@ -77,7 +82,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
   bool get _isDirty {
     return _titleController.text.isNotEmpty || 
            _descriptionController.text.isNotEmpty || 
-           _subjectController.text.isNotEmpty ||
+           _selectedSubject != null ||
            _uploadedItems.isNotEmpty;
   }
 
@@ -116,68 +121,92 @@ class _ContributeScreenState extends State<ContributeScreen> {
       );
 
       if (result != null) {
+        final file = result.files.single;
+        
+        // Size validation (Max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('File too large. Max size is 10MB.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
         setState(() {
           _uploadedItems.add(UploadedItem(
             type: UploadType.pdf,
-            name: result.files.single.name,
-            size: _formatBytes(result.files.single.size),
-            path: result.files.single.path ?? result.files.single.name,
+            name: file.name,
+            size: _formatBytes(file.size),
+            path: file.path ?? file.name,
           ));
         });
       }
     } catch (e) {
       debugPrint('Error picking PDF: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking file: $e')),
+        );
+      }
     }
   }
 
   Future<void> _pickImages() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Choose from Gallery'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final List<XFile> images = await ImagePicker().pickMultiImage();
-                  if (images.isNotEmpty) {
-                    setState(() {
-                      for (var image in images) {
+    try {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final List<XFile> images = await ImagePicker().pickMultiImage();
+                    if (images.isNotEmpty) {
+                      setState(() {
+                        for (var image in images) {
+                          _uploadedItems.add(UploadedItem(
+                            type: UploadType.image,
+                            name: image.name,
+                            path: image.path,
+                          ));
+                        }
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Take Photo'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final XFile? photo = await ImagePicker().pickImage(source: ImageSource.camera);
+                    if (photo != null) {
+                      setState(() {
                         _uploadedItems.add(UploadedItem(
                           type: UploadType.image,
-                          name: image.name,
-                          path: image.path,
+                          name: photo.name,
+                          path: photo.path,
                         ));
-                      }
-                    });
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Take Photo'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final XFile? photo = await ImagePicker().pickImage(source: ImageSource.camera);
-                  if (photo != null) {
-                    setState(() {
-                      _uploadedItems.add(UploadedItem(
-                        type: UploadType.image,
-                        name: photo.name,
-                        path: photo.path,
-                      ));
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Error picking images: $e');
+    }
   }
 
   String _formatBytes(int bytes) {
@@ -229,15 +258,16 @@ class _ContributeScreenState extends State<ContributeScreen> {
                       _buildSectionLabel('Content Details'),
                       const SizedBox(height: 12),
                       
-                      // Subject Input
-                      TextFormField(
-                        controller: _subjectController,
+                      // Subject Dropdown
+                      DropdownButtonFormField<String>(
+                        value: _selectedSubject,
                         decoration: const InputDecoration(
                           labelText: 'Subject / Topic',
-                          hintText: 'e.g., Linear Algebra, Organic Chemistry',
                           prefixIcon: Icon(Icons.class_outlined),
                         ),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter a subject' : null,
+                        items: _subjects.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                        onChanged: (val) => setState(() => _selectedSubject = val),
+                        validator: (value) => value == null ? 'Please select a subject' : null,
                       ),
                       const SizedBox(height: 16),
                       
@@ -249,7 +279,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                           hintText: 'Clear, specific title',
                           prefixIcon: Icon(Icons.title),
                         ),
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter a title' : null,
+                        validator: ValidationService.validateResourceTitle,
                         maxLength: 100,
                       ),
                       const SizedBox(height: 16),
@@ -267,7 +297,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                           ),
                         ),
                         maxLines: 4,
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter a description' : null,
+                        validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null,
                         maxLength: 500,
                       ),
                       const SizedBox(height: 24),
@@ -303,12 +333,12 @@ class _ContributeScreenState extends State<ContributeScreen> {
                               icon: const Icon(Icons.check_circle),
                               color: colors.primary,
                               onPressed: () {
-                                if (_textContentController.text.isNotEmpty) {
+                                if (_textContentController.text.trim().isNotEmpty) {
                                   setState(() {
                                     _uploadedItems.add(UploadedItem(
                                       type: UploadType.text,
                                       name: 'Text Content',
-                                      path: _textContentController.text,
+                                      path: ValidationService.sanitizeInput(_textContentController.text),
                                       preview: _textContentController.text,
                                     ));
                                     _textContentController.clear();
@@ -333,14 +363,14 @@ class _ContributeScreenState extends State<ContributeScreen> {
                               icon: const Icon(Icons.check_circle),
                               color: colors.primary,
                               onPressed: () {
-                                if (_linkController.text.isNotEmpty) {
+                                if (_linkController.text.trim().isNotEmpty) {
                                   // Simple validation
                                   if (Uri.tryParse(_linkController.text)?.hasAbsolutePath ?? false) {
                                     setState(() {
                                       _uploadedItems.add(UploadedItem(
                                         type: UploadType.link,
                                         name: 'External Link',
-                                        path: _linkController.text,
+                                        path: _linkController.text.trim(),
                                       ));
                                       _linkController.clear();
                                       _showLinkInput = false;
@@ -584,7 +614,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
       for (final item in _uploadedItems) {
         if (item.type == UploadType.text) {
           if (textContentBuffer.isNotEmpty) textContentBuffer.writeln('\n---\n');
-          textContentBuffer.write(item.path); // path stores the text content for text type
+          textContentBuffer.write(item.path); 
         } else if (item.type == UploadType.link) {
           attachmentUrls.add(item.path);
         } else if (item.type == UploadType.pdf || item.type == UploadType.image) {
@@ -602,23 +632,16 @@ class _ContributeScreenState extends State<ContributeScreen> {
         }
       }
 
-      // Determine main file URL (first non-text attachment)
       if (attachmentUrls.isNotEmpty) {
         mainFileUrl = attachmentUrls.first;
-        // If multiple attachments, keep the rest in attachmentUrls
-        // If we want to store ALL in attachmentUrls (including main), we can do that too.
-        // But for now, let's say fileUrl is the PRIMARY one, and attachmentUrls are EXTRA.
-        // So we remove the first one from the list?
-        // Or we keep all in attachmentUrls and just duplicate the first one to fileUrl for easy access.
-        // Let's duplicate to be safe, so attachmentUrls contains EVERYTHING uploaded.
       }
 
       final resource = Resource(
         id: const Uuid().v4(),
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim(),
+        title: ValidationService.sanitizeInput(_titleController.text),
+        description: ValidationService.sanitizeInput(_descriptionController.text),
         type: _selectedType,
-        subject: _subjectController.text.trim(),
+        subject: _selectedSubject ?? 'Other',
         authorId: user.id,
         authorName: user.name,
         qualityRating: 0.0,
@@ -635,7 +658,6 @@ class _ContributeScreenState extends State<ContributeScreen> {
       );
 
       if (user.isDemo) {
-        // Just simulate success for demo user
         await Future.delayed(const Duration(seconds: 1));
       } else {
         await _resourceService.uploadResource(resource);
@@ -679,7 +701,10 @@ class _ContributeScreenState extends State<ContributeScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $e')),
+          SnackBar(
+            content: Text('Failed to submit: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
         );
       }
     } finally {

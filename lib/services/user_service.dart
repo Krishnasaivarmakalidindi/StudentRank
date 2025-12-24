@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/foundation.dart';
-// import 'package:google_sign_in/google_sign_in.dart' as gsi;
+import 'package:google_sign_in/google_sign_in.dart' as gsi;
 import 'package:studentrank/models/user.dart';
 
 class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final auth.FirebaseAuth _auth = auth.FirebaseAuth.instance;
-  // final gsi.GoogleSignIn _googleSignIn = gsi.GoogleSignIn();
+  final gsi.GoogleSignIn _googleSignIn = gsi.GoogleSignIn();
+  
   static const String _usersCollection = 'users';
 
   Stream<auth.User?> get authStateChanges => _auth.authStateChanges();
@@ -45,9 +46,62 @@ class UserService {
   }
 
   Future<User?> signInWithGoogle() async {
-    // Temporarily disabled to prevent crashes
-    debugPrint('Google Sign-In is temporarily disabled.');
-    throw Exception('Google Sign-In is temporarily disabled.');
+    try {
+      // 1. Trigger Google Sign In flow
+      final gsi.GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User canceled the sign-in
+        return null; 
+      }
+
+      // 2. Obtain the auth details from the request
+      final gsi.GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // 3. Create a new credential
+      final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // 4. Sign in to Firebase with the credential
+      final auth.UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final auth.User? firebaseUser = userCredential.user;
+
+      if (firebaseUser == null) return null;
+
+      // 5. Check if user exists in Firestore
+      final doc = await _firestore.collection(_usersCollection).doc(firebaseUser.uid).get();
+
+      if (doc.exists) {
+        // Existing user
+        final data = doc.data()!;
+        return User.fromJson({...data, 'id': doc.id});
+      } else {
+        // New user - create profile
+        final newUser = User(
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName ?? "Student",
+          email: firebaseUser.email ?? "",
+          joinedDate: DateTime.now(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isVerified: false,
+          profileCompleted: true, // Assume minimal profile is complete
+          reputationScore: 0,
+          collegeRank: 0,
+          level: 1,
+          subjects: [],
+          badges: [],
+          profileImageUrl: firebaseUser.photoURL,
+        );
+
+        await createUser(newUser);
+        return newUser;
+      }
+    } catch (e) {
+      debugPrint('Error signing in with Google: $e');
+      rethrow;
+    }
   }
 
   Future<User?> signUpWithEmailAndPassword(
@@ -165,10 +219,16 @@ class UserService {
   }
 
   Future<void> signOut() async {
-    await Future.wait([
-      _auth.signOut(),
-      // _googleSignIn.signOut(),
-    ]);
+    try {
+      await Future.wait([
+        _auth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
+    } catch (e) {
+      debugPrint('Error signing out: $e');
+      // Even if Google sign out fails, we want to ensure Firebase auth is cleared
+      await _auth.signOut();
+    }
   }
 
   Future<User?> getUserById(String userId) async {

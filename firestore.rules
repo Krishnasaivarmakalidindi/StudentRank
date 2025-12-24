@@ -11,34 +11,52 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Users collection - users can read all, but only update their own
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update, delete: if isOwner(userId);
+    function isAdmin() {
+      // In a real app, you'd check a custom claim or an admin list
+      // For now, we'll assume a field 'isAdmin' on the user doc or similar
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Resources collection - read by authenticated users, create by authenticated, update/delete by author
+    // User Profiles
+    match /users/{userId} {
+      // Allow anyone to read basic profile info (for leaderboards etc)
+      // But maybe strict: only auth users can read
+      allow read: if isAuthenticated();
+      
+      // Only owner can write to their profile
+      // Prevent updating sensitive fields like 'reputationScore' directly from client
+      // (Reputation should be updated via Cloud Functions or secure backend calls, 
+      // but if we must allow client update for MVP, we restrict it)
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) 
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['reputationScore', 'level', 'badges', 'isVerified']));
+      
+      allow delete: if isOwner(userId);
+    }
+    
+    // Resources
     match /resources/{resourceId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.authorId;
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+      allow create: if isAuthenticated() 
+                    && request.resource.data.title.size() >= 5
+                    && request.resource.data.description.size() > 0;
+      // Only author or admin can update/delete
+      allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isAdmin());
     }
     
-    // Activities collection - read by authenticated, create by authenticated, update/delete by owner
+    // Activities
     match /activities/{activityId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      // Activities are usually system-generated, but if client generates them:
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if false; // Audit log should not be deleted
     }
     
-    // Study groups collection - read by authenticated, create by authenticated, update/delete by admin
+    // Study Groups
     match /study_groups/{groupId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.adminId;
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated() && request.auth.uid == resource.data.adminId;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid in resource.data.memberIds);
     }
   }
 }

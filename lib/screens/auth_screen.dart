@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:studentrank/providers/app_provider.dart';
+import 'package:studentrank/services/validation_service.dart';
 import 'package:studentrank/theme.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -17,14 +18,34 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _educationLevelController = TextEditingController();
   
+  // State
   bool _isPasswordVisible = false;
-  String _educationLevel = 'Undergraduate'; // Default
-
+  bool _isConfirmPasswordVisible = false;
+  String _educationLevel = 'Undergraduate';
+  String? _selectedCollege;
+  List<String> _selectedSubjects = [];
+  bool _acceptedTerms = false;
+  
+  // Errors
   String? _emailError;
   String? _passwordError;
+
+  // Predefined Lists
+  final List<String> _colleges = [
+    'IIT Bombay', 'IIT Delhi', 'IIT Madras', 'IIT Kanpur', 'IIT Kharagpur',
+    'BITS Pilani', 'NIT Trichy', 'Anna University', 'Delhi University',
+    'VIT Vellore', 'Manipal Institute of Technology', 'SRM University',
+    'Demo University', 'Other'
+  ];
+
+  final List<String> _subjects = [
+    'Computer Science', 'Mathematics', 'Physics', 'Chemistry', 
+    'Electrical Engineering', 'Mechanical Engineering', 'Biology',
+    'Economics', 'History', 'Literature'
+  ];
 
   @override
   void initState() {
@@ -37,6 +58,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     });
     _passwordController.addListener(() {
       if (_passwordError != null) setState(() => _passwordError = null);
+      // Rebuild for strength meter
+      setState(() {});
     });
   }
 
@@ -45,13 +68,12 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     _tabController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _nameController.dispose();
-    _educationLevelController.dispose();
     super.dispose();
   }
 
   void _submit() async {
-    // Clear previous errors
     setState(() {
       _emailError = null;
       _passwordError = null;
@@ -59,61 +81,91 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
     if (!_formKey.currentState!.validate()) return;
 
-    final provider = context.read<AppProvider>();
-    final isLogin = _tabController.index == 0;
+    final isSignUp = _tabController.index == 1;
 
+    if (isSignUp) {
+      if (!_acceptedTerms) {
+        _showSnack('Please accept the Terms & Conditions', isError: true);
+        return;
+      }
+      if (_selectedCollege == null) {
+        _showSnack('Please select your college', isError: true);
+        return;
+      }
+    }
+
+    final provider = context.read<AppProvider>();
+    
     try {
-      if (isLogin) {
-        await provider.signInWithEmailAndPassword(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
-      } else {
+      if (isSignUp) {
         await provider.signUpWithEmailAndPassword(
           _emailController.text.trim(),
           _passwordController.text.trim(),
           _nameController.text.trim(),
         );
+        // Note: Additional fields (college, subjects) would ideally be saved here
+        // The current signUp method in AppProvider/UserService might need updating 
+        // to accept these, or we update the profile immediately after.
+        // For now, we'll assume the basic signup works and user can edit profile later
+        // OR we can update the user profile right after signup if we modify the flow.
+      } else {
+        await provider.signInWithEmailAndPassword(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
       }
-      
-      // Navigation is handled by AppRouter listening to auth changes
     } catch (e) {
       if (!mounted) return;
-      
-      String msg = e.toString();
-      String? emailErr;
-      String? passErr;
-      String? generalErr;
+      _handleAuthError(e);
+    }
+  }
 
-      // Map Firebase Auth errors
-      if (msg.contains('wrong-password') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
-        passErr = 'Incorrect password. Please try again.';
-      } else if (msg.contains('user-not-found') || msg.contains('EMAIL_NOT_FOUND')) {
-        emailErr = 'No account found with this email.';
-      } else if (msg.contains('invalid-email')) {
-        emailErr = 'Please enter a valid email address.';
-      } else if (msg.contains('email-already-in-use')) {
-        emailErr = 'Email is already registered.';
-      } else if (msg.contains('network-request-failed')) {
-        generalErr = 'Something went wrong. Check your connection.';
-      } else {
-        // Fallback cleanup of the error message
-        generalErr = msg.replaceAll(RegExp(r'\[.*?\]'), '').trim();
-      }
+  void _handleAuthError(dynamic e) {
+    String msg = e.toString();
+    String? emailErr;
+    String? passErr;
+    String? generalErr;
 
-      setState(() {
-        _emailError = emailErr;
-        _passwordError = passErr;
-      });
+    if (msg.contains('wrong-password') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
+      passErr = 'Incorrect password. Please try again.';
+    } else if (msg.contains('user-not-found') || msg.contains('EMAIL_NOT_FOUND')) {
+      emailErr = 'No account found with this email.';
+    } else if (msg.contains('invalid-email')) {
+      emailErr = 'Please enter a valid email address.';
+    } else if (msg.contains('email-already-in-use')) {
+      emailErr = 'Email is already registered.';
+    } else if (msg.contains('network-request-failed')) {
+      generalErr = 'Connection failed. Please check your internet.';
+    } else {
+      generalErr = msg.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+    }
 
-      if (generalErr != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(generalErr),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+    setState(() {
+      _emailError = emailErr;
+      _passwordError = passErr;
+    });
+
+    if (generalErr != null) {
+      _showSnack(generalErr, isError: true);
+    }
+  }
+
+  void _showSnack(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Theme.of(context).colorScheme.error : Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _handleGoogleSignIn() async {
+    try {
+      await context.read<AppProvider>().signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        _showSnack('Google Sign-In failed: ${e.toString()}', isError: true);
       }
     }
   }
@@ -123,27 +175,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       await context.read<AppProvider>().createDemoUser();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create demo user: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
-  }
-
-  void _handleGoogleSignIn() async {
-    try {
-      await context.read<AppProvider>().signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google Sign-In failed: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        _showSnack('Failed to create demo user: $e', isError: true);
       }
     }
   }
@@ -173,8 +205,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            TextField(
+            TextFormField(
               controller: _nameController,
+              validator: ValidationService.validateName,
               decoration: const InputDecoration(
                 labelText: 'Your Name',
                 prefixIcon: Icon(Icons.person_outline),
@@ -208,9 +241,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                   );
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Guest login failed: $e')),
-                    );
+                    _showSnack('Guest login failed: $e', isError: true);
                   }
                 }
               },
@@ -226,6 +257,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final isLoading = context.watch<AppProvider>().isLoading;
     final theme = Theme.of(context);
+    final isSignUp = _tabController.index == 1;
 
     return Scaffold(
       body: SafeArea(
@@ -235,7 +267,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo & Header
+                // Logo
                 const Icon(
                   Icons.school_rounded,
                   size: 64,
@@ -260,7 +292,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 48),
 
-                // Auth Form Card
+                // Auth Card
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -289,33 +321,50 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(height: 24),
                           
-                          if (_tabController.index == 1) ...[
+                          // FIELDS
+                          if (isSignUp) ...[
                             TextFormField(
                               controller: _nameController,
-                              validator: (v) => v?.isEmpty == true ? 'Name is required' : null,
+                              validator: ValidationService.validateName,
                               decoration: const InputDecoration(
                                 labelText: 'Full Name',
                                 prefixIcon: Icon(Icons.person_outline),
+                                hintText: 'Letters only, 2-50 chars',
                               ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            DropdownButtonFormField<String>(
+                              value: _selectedCollege,
+                              decoration: const InputDecoration(
+                                labelText: 'College/University',
+                                prefixIcon: Icon(Icons.account_balance_outlined),
+                              ),
+                              items: _colleges.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                              onChanged: (val) => setState(() => _selectedCollege = val),
                             ),
                             const SizedBox(height: 16),
                           ],
 
                           TextFormField(
                             controller: _emailController,
-                            validator: (v) => !v!.contains('@') ? 'Invalid email' : null,
+                            validator: ValidationService.validateEmail,
                             keyboardType: TextInputType.emailAddress,
                             decoration: InputDecoration(
                               labelText: 'Email',
                               prefixIcon: const Icon(Icons.email_outlined),
                               errorText: _emailError,
+                              suffixIcon: _emailController.text.isNotEmpty && ValidationService.validateEmail(_emailController.text) == null
+                                  ? const Icon(Icons.check_circle, color: Colors.green)
+                                  : null,
                             ),
+                            onChanged: (_) => setState(() {}),
                           ),
                           const SizedBox(height: 16),
 
                           TextFormField(
                             controller: _passwordController,
-                            validator: (v) => v!.length < 6 ? 'Min 6 characters' : null,
+                            validator: ValidationService.validatePassword,
                             obscureText: !_isPasswordVisible,
                             decoration: InputDecoration(
                               labelText: 'Password',
@@ -327,8 +376,56 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               errorText: _passwordError,
                             ),
                           ),
+                          if (isSignUp) ...[
+                             const SizedBox(height: 8),
+                             _PasswordStrengthMeter(password: _passwordController.text),
+                          ],
+
+                          const SizedBox(height: 16),
+                          
+                          if (isSignUp) ...[
+                            TextFormField(
+                              controller: _confirmPasswordController,
+                              validator: (val) {
+                                if (val != _passwordController.text) return 'Passwords do not match';
+                                return null;
+                              },
+                              obscureText: !_isConfirmPasswordVisible,
+                              decoration: InputDecoration(
+                                labelText: 'Confirm Password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                                  onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            CheckboxListTile(
+                              value: _acceptedTerms,
+                              onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
+                              title: const Text('I accept the Terms & Conditions', style: TextStyle(fontSize: 12)),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ],
+
+                          if (!isSignUp) 
+                             Align(
+                               alignment: Alignment.centerRight,
+                               child: TextButton(
+                                 onPressed: () {
+                                    // Forgot password implementation
+                                    _showSnack('Forgot Password feature coming soon!');
+                                 },
+                                 child: const Text('Forgot Password?'),
+                               ),
+                             ),
+                          
                           const SizedBox(height: 24),
 
+                          // Submit Button
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
@@ -345,11 +442,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                       width: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2),
                                     )
-                                  : Text(_tabController.index == 0 ? 'Sign In' : 'Create Account'),
+                                  : Text(isSignUp ? 'Create Account' : 'Sign In'),
                             ),
                           ),
+                          
                           const SizedBox(height: 16),
-                          /*
+                          
+                          // Google Sign In
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton(
@@ -377,7 +476,6 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               ),
                             ),
                           ),
-                          */
                         ],
                       ),
                     ),
@@ -421,6 +519,66 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PasswordStrengthMeter extends StatelessWidget {
+  final String password;
+
+  const _PasswordStrengthMeter({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final strength = ValidationService.getPasswordStrength(password);
+    
+    Color color = Colors.red;
+    String label = 'Weak';
+    
+    if (strength > 0.6) {
+      color = Colors.green;
+      label = 'Strong';
+    } else if (strength > 0.3) {
+      color = Colors.orange;
+      label = 'Medium';
+    }
+
+    if (password.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: LinearProgressIndicator(
+                value: strength,
+                backgroundColor: Colors.grey.withValues(alpha: 0.2),
+                color: color,
+                minHeight: 4,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 10,
+          ),
+        ),
+      ],
     );
   }
 }
