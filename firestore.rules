@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - users can read all, but only update their own
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update, delete: if isOwner(userId);
+    }
+    
+    // Resources collection - read by authenticated users, create by authenticated, update/delete by author
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.authorId;
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+    }
+    
+    // Activities collection - read by authenticated, create by authenticated, update/delete by owner
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Study groups collection - read by authenticated, create by authenticated, update/delete by admin
+    match /study_groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.adminId;
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.adminId;
+    }
+  }
+}
