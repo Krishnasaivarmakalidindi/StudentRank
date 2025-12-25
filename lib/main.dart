@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:studentrank/providers/app_provider.dart';
+import 'package:studentrank/providers/chat_provider.dart';
+import 'package:studentrank/providers/file_share_provider.dart';
+import 'package:studentrank/services/group_service.dart';
 import 'package:studentrank/firebase_options.dart';
 import 'theme.dart';
 import 'nav.dart';
@@ -9,6 +12,10 @@ import 'nav.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  // Initialize default groups (fire and forget)
+  GroupService().initializeDefaultGroups();
+  
   runApp(const MyApp());
 }
 
@@ -20,6 +27,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AppProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => FileShareProvider()),
       ],
       child: const MyAppContent(),
     );
