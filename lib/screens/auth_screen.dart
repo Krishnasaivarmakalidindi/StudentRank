@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:studentrank/nav.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/validation_service.dart';
 import 'package:studentrank/theme.dart';
@@ -24,14 +26,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   // State
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _rememberMe = false;
   String _educationLevel = 'Undergraduate';
   String? _selectedCollege;
-  List<String> _selectedSubjects = [];
   bool _acceptedTerms = false;
+  bool _localLoading = false; // Local loading state for better control
   
   // Errors
   String? _emailError;
   String? _passwordError;
+  String? _generalError;
 
   // Predefined Lists
   final List<String> _colleges = [
@@ -41,12 +45,6 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     'Demo University', 'Other'
   ];
 
-  final List<String> _subjects = [
-    'Computer Science', 'Mathematics', 'Physics', 'Chemistry', 
-    'Electrical Engineering', 'Mechanical Engineering', 'Biology',
-    'Economics', 'History', 'Literature'
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -54,12 +52,21 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     
     // Clear errors on edit
     _emailController.addListener(() {
-      if (_emailError != null) setState(() => _emailError = null);
+      if (_emailError != null || _generalError != null) {
+        setState(() {
+          _emailError = null;
+          _generalError = null;
+        });
+      }
     });
     _passwordController.addListener(() {
-      if (_passwordError != null) setState(() => _passwordError = null);
-      // Rebuild for strength meter
-      setState(() {});
+      if (_passwordError != null || _generalError != null) {
+        setState(() {
+          _passwordError = null;
+          _generalError = null;
+        });
+      }
+      setState(() {}); // For strength meter
     });
   }
 
@@ -77,6 +84,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     setState(() {
       _emailError = null;
       _passwordError = null;
+      _generalError = null;
     });
 
     if (!_formKey.currentState!.validate()) return;
@@ -85,15 +93,16 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
     if (isSignUp) {
       if (!_acceptedTerms) {
-        _showSnack('Please accept the Terms & Conditions', isError: true);
+        setState(() => _generalError = 'Please accept the Terms & Conditions');
         return;
       }
       if (_selectedCollege == null) {
-        _showSnack('Please select your college', isError: true);
+        setState(() => _generalError = 'Please select your college');
         return;
       }
     }
 
+    setState(() => _localLoading = true);
     final provider = context.read<AppProvider>();
     
     try {
@@ -103,19 +112,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
           _passwordController.text.trim(),
           _nameController.text.trim(),
         );
-        // Note: Additional fields (college, subjects) would ideally be saved here
-        // The current signUp method in AppProvider/UserService might need updating 
-        // to accept these, or we update the profile immediately after.
-        // For now, we'll assume the basic signup works and user can edit profile later
-        // OR we can update the user profile right after signup if we modify the flow.
       } else {
         await provider.signInWithEmailAndPassword(
           _emailController.text.trim(),
           _passwordController.text.trim(),
         );
       }
+      // Explicit navigation if redirect doesn't happen fast enough
+      if (mounted) {
+         context.go(AppRoutes.main);
+      }
     } catch (e) {
       if (!mounted) return;
+      setState(() => _localLoading = false);
       _handleAuthError(e);
     }
   }
@@ -124,58 +133,45 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     String msg = e.toString();
     String? emailErr;
     String? passErr;
-    String? generalErr;
+    String? genErr;
 
+    // Map Firebase auth errors to user friendly messages
     if (msg.contains('wrong-password') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
-      passErr = 'Incorrect password. Please try again.';
+      // Show generic error for security, or specific if preferred. 
+      // User asked for "Incorrect email or password" on SAME page.
+      // Usually better to attach to fields or show a banner.
+      // I'll attach to password field for bad password.
+      passErr = 'Incorrect email or password';
+      emailErr = ' '; // Mark email as error too visually
     } else if (msg.contains('user-not-found') || msg.contains('EMAIL_NOT_FOUND')) {
-      emailErr = 'No account found with this email.';
+       emailErr = 'No account found with this email';
+       passErr = ' ';
     } else if (msg.contains('invalid-email')) {
-      emailErr = 'Please enter a valid email address.';
+      emailErr = 'Please enter a valid email address';
     } else if (msg.contains('email-already-in-use')) {
-      emailErr = 'Email is already registered.';
+      emailErr = 'Email is already registered';
     } else if (msg.contains('network-request-failed')) {
-      generalErr = 'Connection failed. Please check your internet.';
+      genErr = 'Connection failed. Please check your internet.';
     } else {
-      generalErr = msg.replaceAll(RegExp(r'\[.*?\]'), '').trim();
+      genErr = msg.replaceAll(RegExp(r'\[.*?\]'), '').trim();
     }
 
     setState(() {
       _emailError = emailErr;
       _passwordError = passErr;
+      _generalError = genErr;
     });
-
-    if (generalErr != null) {
-      _showSnack(generalErr, isError: true);
-    }
-  }
-
-  void _showSnack(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Theme.of(context).colorScheme.error : Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _handleGoogleSignIn() async {
+    setState(() => _localLoading = true);
     try {
       await context.read<AppProvider>().signInWithGoogle();
+      if (mounted) context.go(AppRoutes.main);
     } catch (e) {
       if (mounted) {
-        _showSnack('Google Sign-In failed: ${e.toString()}', isError: true);
-      }
-    }
-  }
-
-  void _continueAsDemo() async {
-    try {
-      await context.read<AppProvider>().createDemoUser();
-    } catch (e) {
-      if (mounted) {
-        _showSnack('Failed to create demo user: $e', isError: true);
+        setState(() => _localLoading = false);
+        _handleAuthError(e);
       }
     }
   }
@@ -207,14 +203,13 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             const SizedBox(height: 20),
             TextFormField(
               controller: _nameController,
-              validator: ValidationService.validateName,
               decoration: const InputDecoration(
                 labelText: 'Your Name',
                 prefixIcon: Icon(Icons.person_outline),
               ),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
+             DropdownButtonFormField<String>(
               value: _educationLevel,
               decoration: const InputDecoration(
                 labelText: 'Education Level',
@@ -232,16 +227,18 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             ElevatedButton(
               onPressed: () async {
                 if (_nameController.text.trim().isEmpty) return;
-                
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
+                setState(() => _localLoading = true);
                 try {
                   await context.read<AppProvider>().signInAnonymously(
                     _nameController.text.trim(),
                     _educationLevel,
                   );
+                  if (mounted) context.go(AppRoutes.main);
                 } catch (e) {
                   if (context.mounted) {
-                    _showSnack('Guest login failed: $e', isError: true);
+                    setState(() => _localLoading = false);
+                    _handleAuthError(e);
                   }
                 }
               },
@@ -255,269 +252,299 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AppProvider>().isLoading;
     final theme = Theme.of(context);
     final isSignUp = _tabController.index == 1;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Logo
-                const Icon(
-                  Icons.school_rounded,
-                  size: 64,
-                  color: LightModeColors.lightPrimary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'StudentRank',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your academic journey starts here.',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 48),
-
-                // Auth Card
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    side: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.5),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo
+                    const Icon(
+                      Icons.school_rounded,
+                      size: 64,
+                      color: LightModeColors.lightPrimary,
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          TabBar(
-                            controller: _tabController,
-                            labelColor: theme.colorScheme.primary,
-                            unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                            indicatorColor: theme.colorScheme.primary,
-                            dividerColor: Colors.transparent,
-                            onTap: (_) => setState(() {}),
-                            tabs: const [
-                              Tab(text: 'Sign In'),
-                              Tab(text: 'Sign Up'),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          
-                          // FIELDS
-                          if (isSignUp) ...[
-                            TextFormField(
-                              controller: _nameController,
-                              validator: ValidationService.validateName,
-                              decoration: const InputDecoration(
-                                labelText: 'Full Name',
-                                prefixIcon: Icon(Icons.person_outline),
-                                hintText: 'Letters only, 2-50 chars',
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            
-                            DropdownButtonFormField<String>(
-                              value: _selectedCollege,
-                              decoration: const InputDecoration(
-                                labelText: 'College/University',
-                                prefixIcon: Icon(Icons.account_balance_outlined),
-                              ),
-                              items: _colleges.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                              onChanged: (val) => setState(() => _selectedCollege = val),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-
-                          TextFormField(
-                            controller: _emailController,
-                            validator: ValidationService.validateEmail,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              prefixIcon: const Icon(Icons.email_outlined),
-                              errorText: _emailError,
-                              suffixIcon: _emailController.text.isNotEmpty && ValidationService.validateEmail(_emailController.text) == null
-                                  ? const Icon(Icons.check_circle, color: Colors.green)
-                                  : null,
-                            ),
-                            onChanged: (_) => setState(() {}),
-                          ),
-                          const SizedBox(height: 16),
-
-                          TextFormField(
-                            controller: _passwordController,
-                            validator: ValidationService.validatePassword,
-                            obscureText: !_isPasswordVisible,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              suffixIcon: IconButton(
-                                icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                                onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
-                              ),
-                              errorText: _passwordError,
-                            ),
-                          ),
-                          if (isSignUp) ...[
-                             const SizedBox(height: 8),
-                             _PasswordStrengthMeter(password: _passwordController.text),
-                          ],
-
-                          const SizedBox(height: 16),
-                          
-                          if (isSignUp) ...[
-                            TextFormField(
-                              controller: _confirmPasswordController,
-                              validator: (val) {
-                                if (val != _passwordController.text) return 'Passwords do not match';
-                                return null;
-                              },
-                              obscureText: !_isConfirmPasswordVisible,
-                              decoration: InputDecoration(
-                                labelText: 'Confirm Password',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                                  onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            
-                            CheckboxListTile(
-                              value: _acceptedTerms,
-                              onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
-                              title: const Text('I accept the Terms & Conditions', style: TextStyle(fontSize: 12)),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ],
-
-                          if (!isSignUp) 
-                             Align(
-                               alignment: Alignment.centerRight,
-                               child: TextButton(
-                                 onPressed: () {
-                                    // Forgot password implementation
-                                    _showSnack('Forgot Password feature coming soon!');
-                                 },
-                                 child: const Text('Forgot Password?'),
-                               ),
-                             ),
-                          
-                          const SizedBox(height: 24),
-
-                          // Submit Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: isLoading ? null : _submit,
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : Text(isSignUp ? 'Create Account' : 'Sign In'),
-                            ),
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Google Sign In
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: isLoading ? null : _handleGoogleSignIn,
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                side: BorderSide(color: theme.colorScheme.outline),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.g_mobiledata, size: 28, color: theme.colorScheme.onSurface),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Continue with Google',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 16),
+                    Text(
+                      'StudentRank',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your academic journey starts here.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                const SizedBox(height: 32),
-                
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: theme.colorScheme.outline)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'OR',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                    // Auth Card
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TabBar(
+                                controller: _tabController,
+                                labelColor: theme.colorScheme.primary,
+                                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                                indicatorColor: theme.colorScheme.primary,
+                                dividerColor: Colors.transparent,
+                                onTap: (_) => setState(() {
+                                  _generalError = null;
+                                  _emailError = null;
+                                  _passwordError = null;
+                                }),
+                                tabs: const [
+                                  Tab(text: 'Sign In'),
+                                  Tab(text: 'Sign Up'),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              
+                              if (_generalError != null)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text(_generalError!, style: TextStyle(color: theme.colorScheme.error))),
+                                    ],
+                                  ),
+                                ),
+                              
+                              // FIELDS
+                              if (isSignUp) ...[
+                                TextFormField(
+                                  controller: _nameController,
+                                  validator: ValidationService.validateName,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Full Name',
+                                    prefixIcon: Icon(Icons.person_outline),
+                                    hintText: 'Letters only, 2-50 chars',
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                
+                                DropdownButtonFormField<String>(
+                                  value: _selectedCollege,
+                                  decoration: const InputDecoration(
+                                    labelText: 'College/University',
+                                    prefixIcon: Icon(Icons.account_balance_outlined),
+                                  ),
+                                  items: _colleges.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                                  onChanged: (val) => setState(() => _selectedCollege = val),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+
+                              TextFormField(
+                                controller: _emailController,
+                                validator: ValidationService.validateEmail,
+                                keyboardType: TextInputType.emailAddress,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  prefixIcon: const Icon(Icons.email_outlined),
+                                  errorText: _emailError,
+                                  // Show checkmark only if valid and no error
+                                  suffixIcon: _emailController.text.isNotEmpty && _emailError == null && ValidationService.validateEmail(_emailController.text) == null
+                                      ? const Icon(Icons.check_circle, color: Colors.green)
+                                      : null,
+                                ),
+                                onChanged: (_) => setState(() {}),
+                              ),
+                              const SizedBox(height: 16),
+
+                              TextFormField(
+                                controller: _passwordController,
+                                validator: ValidationService.validatePassword,
+                                obscureText: !_isPasswordVisible,
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  prefixIcon: const Icon(Icons.lock_outline),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                                    onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                                  ),
+                                  errorText: _passwordError,
+                                ),
+                              ),
+                              
+                              if (!isSignUp) ...[
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Checkbox(
+                                          value: _rememberMe, 
+                                          onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                        Text('Remember me', style: theme.textTheme.bodySmall),
+                                      ],
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Forgot Password feature coming soon!')));
+                                      },
+                                      child: const Text('Forgot Password?'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              
+                              if (isSignUp) ...[
+                                 const SizedBox(height: 8),
+                                 _PasswordStrengthMeter(password: _passwordController.text),
+                              ],
+
+                              const SizedBox(height: 16),
+                              
+                              if (isSignUp) ...[
+                                TextFormField(
+                                  controller: _confirmPasswordController,
+                                  validator: (val) {
+                                    if (val != _passwordController.text) return 'Passwords do not match';
+                                    return null;
+                                  },
+                                  obscureText: !_isConfirmPasswordVisible,
+                                  decoration: InputDecoration(
+                                    labelText: 'Confirm Password',
+                                    prefixIcon: const Icon(Icons.lock_outline),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                                      onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                
+                                CheckboxListTile(
+                                  value: _acceptedTerms,
+                                  onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
+                                  title: const Text('I accept the Terms & Conditions', style: TextStyle(fontSize: 12)),
+                                  controlAffinity: ListTileControlAffinity.leading,
+                                  contentPadding: EdgeInsets.zero,
+                                ),
+                              ],
+                              
+                              const SizedBox(height: 24),
+
+                              // Submit Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _submit, // Loading handled by overlay
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(isSignUp ? 'Create Account' : 'Sign In'),
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 16),
+                              
+                              // Google Sign In - kept but improved
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  onPressed: _handleGoogleSignIn,
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(color: theme.colorScheme.outline),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.g_mobiledata, size: 28, color: theme.colorScheme.onSurface),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Continue with Google',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    Expanded(child: Divider(color: theme.colorScheme.outline)),
+
+                    const SizedBox(height: 24),
+                    
+                    // Demo & Guest Buttons
+                    TextButton(
+                      onPressed: _showGuestDialog,
+                      child: const Text('Continue as Guest'),
+                    ),
                   ],
                 ),
-                
-                const SizedBox(height: 32),
-
-                // Demo & Guest Buttons
-                OutlinedButton.icon(
-                  onPressed: isLoading ? null : _continueAsDemo,
-                  icon: const Icon(Icons.play_circle_outline),
-                  label: const Text('Continue with Demo Account'),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: isLoading ? null : _showGuestDialog,
-                  child: const Text('Continue as Guest'),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+          
+          // Loading Overlay
+          if (_localLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.5),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text('Signing in...', style: theme.textTheme.bodyMedium),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
