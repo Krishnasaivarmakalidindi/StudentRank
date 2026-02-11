@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "919109658740",
+    "project_id": "lggf6fl3p8gb2ts3i2o9zt1oicc1ga",
+    "storage_bucket": "lggf6fl3p8gb2ts3i2o9zt1oicc1ga.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:919109658740:android:2bdea87696d6cc15fe0921",
+        "android_client_info": {
+          "package_name": "com.varma.studentrank"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyflc8KoFCPbkHFLHDEHV-PcQaIRd4GhY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
