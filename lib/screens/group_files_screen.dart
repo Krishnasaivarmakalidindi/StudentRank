@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:studentrank/models/file_model.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/providers/file_share_provider.dart';
-import 'package:studentrank/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GroupFilesScreen extends StatefulWidget {
@@ -34,7 +32,17 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
 
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'png', 'jpeg'],
+      allowedExtensions: [
+        'pdf',
+        'doc',
+        'docx',
+        'xls',
+        'xlsx',
+        'txt',
+        'jpg',
+        'png',
+        'jpeg'
+      ],
     );
 
     if (result != null && result.files.single.path != null) {
@@ -89,12 +97,12 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
         if (!mounted) return;
         try {
           await context.read<FileShareProvider>().uploadFile(
-            groupId: widget.groupId,
-            userId: user.id,
-            userName: user.name,
-            file: file,
-            description: descriptionController.text.trim(),
-          );
+                groupId: widget.groupId,
+                userId: user.id,
+                userName: user.name,
+                file: file,
+                description: descriptionController.text.trim(),
+              );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('File uploaded successfully')),
@@ -129,11 +137,16 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
 
   IconData _getFileIcon(String fileType) {
     switch (fileType) {
-      case 'pdf': return Icons.picture_as_pdf;
-      case 'image': return Icons.image;
-      case 'doc': return Icons.description;
-      case 'xls': return Icons.table_chart;
-      default: return Icons.insert_drive_file;
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'image':
+        return Icons.image;
+      case 'doc':
+        return Icons.description;
+      case 'xls':
+        return Icons.table_chart;
+      default:
+        return Icons.insert_drive_file;
     }
   }
 
@@ -154,7 +167,8 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
-                  Text('Uploading... ${(provider.uploadProgress * 100).toInt()}%'),
+                  Text(
+                      'Uploading... ${(provider.uploadProgress * 100).toInt()}%'),
                 ],
               ),
             );
@@ -169,13 +183,18 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.folder_open, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                  Icon(Icons.folder_open,
+                      size: 64,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurfaceVariant
+                          .withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   Text(
                     'No files shared yet',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                 ],
               ),
@@ -194,7 +213,8 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Theme.of(context).colorScheme.surface,
-                    child: Icon(_getFileIcon(file.fileType), color: Theme.of(context).colorScheme.primary),
+                    child: Icon(_getFileIcon(file.fileType),
+                        color: Theme.of(context).colorScheme.primary),
                   ),
                   title: Text(
                     file.fileName,
@@ -206,7 +226,8 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (file.description.isNotEmpty)
-                        Text(file.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(file.description,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Row(
                         children: [
@@ -217,7 +238,10 @@ class _GroupFilesScreenState extends State<GroupFilesScreen> {
                           const Spacer(),
                           Text(
                             'by ${file.uploaderName}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(fontStyle: FontStyle.italic),
                           ),
                         ],
                       ),

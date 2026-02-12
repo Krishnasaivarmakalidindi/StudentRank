@@ -18,8 +18,9 @@ class FileShareService {
     required Function(double) onProgress,
   }) async {
     final fileName = path.basename(file.path);
-    final fileRef = _storage.ref().child('groups/$groupId/files/${DateTime.now().millisecondsSinceEpoch}_$fileName');
-    
+    final fileRef = _storage.ref().child(
+        'groups/$groupId/files/${DateTime.now().millisecondsSinceEpoch}_$fileName');
+
     final uploadTask = fileRef.putFile(file);
 
     uploadTask.snapshotEvents.listen((event) {
@@ -30,18 +31,23 @@ class FileShareService {
     final snapshot = await uploadTask;
     final downloadUrl = await snapshot.ref.getDownloadURL();
     final fileSize = snapshot.totalBytes;
-    
+
     // Determine file type simply by extension for now
     String fileType = 'unknown';
     final ext = path.extension(fileName).toLowerCase();
-    if (['.jpg', '.jpeg', '.png', '.gif'].contains(ext)) fileType = 'image';
-    else if (['.pdf'].contains(ext)) fileType = 'pdf';
-    else if (['.doc', '.docx'].contains(ext)) fileType = 'doc';
-    else if (['.xls', '.xlsx'].contains(ext)) fileType = 'xls';
+    if (['.jpg', '.jpeg', '.png', '.gif'].contains(ext)) {
+      fileType = 'image';
+    } else if (['.pdf'].contains(ext))
+      fileType = 'pdf';
+    else if (['.doc', '.docx'].contains(ext))
+      fileType = 'doc';
+    else if (['.xls', '.xlsx'].contains(ext))
+      fileType = 'xls';
     else if (['.txt'].contains(ext)) fileType = 'text';
 
     // Create FileModel
-    final docRef = _firestore.collection('groups').doc(groupId).collection('files').doc();
+    final docRef =
+        _firestore.collection('groups').doc(groupId).collection('files').doc();
     final fileModel = FileModel(
       fileId: docRef.id,
       groupId: groupId,

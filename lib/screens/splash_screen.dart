@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,7 +8,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -19,10 +17,17 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)));
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeOut)));
-    
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.5, curve: Curves.easeIn)));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+        CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.5, curve: Curves.easeOut)));
+
     _controller.forward();
   }
 
@@ -56,11 +61,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.school, size: 80, color: Theme.of(context).colorScheme.onPrimary),
+                    Icon(Icons.school,
+                        size: 80,
+                        color: Theme.of(context).colorScheme.onPrimary),
                     const SizedBox(height: 24),
-                    Text('StudentRank', style: context.textStyles.headlineLarge?.bold.copyWith(color: Theme.of(context).colorScheme.onPrimary)),
+                    Text('StudentRank',
+                        style: context.textStyles.headlineLarge?.bold.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimary)),
                     const SizedBox(height: 8),
-                    Text('Your Academic Identity', style: context.textStyles.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9))),
+                    Text('Your Academic Identity',
+                        style: context.textStyles.titleMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimary
+                                .withValues(alpha: 0.9))),
                   ],
                 ),
               ),

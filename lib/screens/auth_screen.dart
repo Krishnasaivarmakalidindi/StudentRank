@@ -13,16 +13,17 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
-  
+
   // State
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -31,7 +32,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   String? _selectedCollege;
   bool _acceptedTerms = false;
   bool _localLoading = false; // Local loading state for better control
-  
+
   // Errors
   String? _emailError;
   String? _passwordError;
@@ -39,17 +40,27 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
   // Predefined Lists
   final List<String> _colleges = [
-    'IIT Bombay', 'IIT Delhi', 'IIT Madras', 'IIT Kanpur', 'IIT Kharagpur',
-    'BITS Pilani', 'NIT Trichy', 'Anna University', 'Delhi University',
-    'VIT Vellore', 'Manipal Institute of Technology', 'SRM University',
-    'Demo University', 'Other'
+    'IIT Bombay',
+    'IIT Delhi',
+    'IIT Madras',
+    'IIT Kanpur',
+    'IIT Kharagpur',
+    'BITS Pilani',
+    'NIT Trichy',
+    'Anna University',
+    'Delhi University',
+    'VIT Vellore',
+    'Manipal Institute of Technology',
+    'SRM University',
+    'Demo University',
+    'Other'
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Clear errors on edit
     _emailController.addListener(() {
       if (_emailError != null || _generalError != null) {
@@ -104,7 +115,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
     setState(() => _localLoading = true);
     final provider = context.read<AppProvider>();
-    
+
     try {
       if (isSignUp) {
         await provider.signUpWithEmailAndPassword(
@@ -120,7 +131,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       }
       // Explicit navigation if redirect doesn't happen fast enough
       if (mounted) {
-         context.go(AppRoutes.main);
+        context.go(AppRoutes.main);
       }
     } catch (e) {
       if (!mounted) return;
@@ -136,16 +147,18 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     String? genErr;
 
     // Map Firebase auth errors to user friendly messages
-    if (msg.contains('wrong-password') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
-      // Show generic error for security, or specific if preferred. 
+    if (msg.contains('wrong-password') ||
+        msg.contains('INVALID_LOGIN_CREDENTIALS')) {
+      // Show generic error for security, or specific if preferred.
       // User asked for "Incorrect email or password" on SAME page.
       // Usually better to attach to fields or show a banner.
       // I'll attach to password field for bad password.
       passErr = 'Incorrect email or password';
       emailErr = ' '; // Mark email as error too visually
-    } else if (msg.contains('user-not-found') || msg.contains('EMAIL_NOT_FOUND')) {
-       emailErr = 'No account found with this email';
-       passErr = ' ';
+    } else if (msg.contains('user-not-found') ||
+        msg.contains('EMAIL_NOT_FOUND')) {
+      emailErr = 'No account found with this email';
+      passErr = ' ';
     } else if (msg.contains('invalid-email')) {
       emailErr = 'Please enter a valid email address';
     } else if (msg.contains('email-already-in-use')) {
@@ -209,8 +222,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               ),
             ),
             const SizedBox(height: 16),
-             DropdownButtonFormField<String>(
-              value: _educationLevel,
+            DropdownButtonFormField<String>(
+              initialValue: _educationLevel,
               decoration: const InputDecoration(
                 labelText: 'Education Level',
                 prefixIcon: Icon(Icons.school_outlined),
@@ -231,9 +244,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                 setState(() => _localLoading = true);
                 try {
                   await context.read<AppProvider>().signInAnonymously(
-                    _nameController.text.trim(),
-                    _educationLevel,
-                  );
+                        _nameController.text.trim(),
+                        _educationLevel,
+                      );
                   if (mounted) context.go(AppRoutes.main);
                 } catch (e) {
                   if (context.mounted) {
@@ -296,7 +309,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                         side: BorderSide(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                          color:
+                              theme.colorScheme.outline.withValues(alpha: 0.5),
                         ),
                       ),
                       child: Padding(
@@ -308,7 +322,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               TabBar(
                                 controller: _tabController,
                                 labelColor: theme.colorScheme.primary,
-                                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                                unselectedLabelColor:
+                                    theme.colorScheme.onSurfaceVariant,
                                 indicatorColor: theme.colorScheme.primary,
                                 dividerColor: Colors.transparent,
                                 onTap: (_) => setState(() {
@@ -322,7 +337,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                 ],
                               ),
                               const SizedBox(height: 24),
-                              
+
                               if (_generalError != null)
                                 Container(
                                   padding: const EdgeInsets.all(12),
@@ -333,13 +348,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                                      Icon(Icons.error_outline,
+                                          color: theme.colorScheme.error,
+                                          size: 20),
                                       const SizedBox(width: 8),
-                                      Expanded(child: Text(_generalError!, style: TextStyle(color: theme.colorScheme.error))),
+                                      Expanded(
+                                          child: Text(_generalError!,
+                                              style: TextStyle(
+                                                  color: theme
+                                                      .colorScheme.error))),
                                     ],
                                   ),
                                 ),
-                              
+
                               // FIELDS
                               if (isSignUp) ...[
                                 TextFormField(
@@ -352,15 +373,19 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                
                                 DropdownButtonFormField<String>(
-                                  value: _selectedCollege,
+                                  initialValue: _selectedCollege,
                                   decoration: const InputDecoration(
                                     labelText: 'College/University',
-                                    prefixIcon: Icon(Icons.account_balance_outlined),
+                                    prefixIcon:
+                                        Icon(Icons.account_balance_outlined),
                                   ),
-                                  items: _colleges.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                                  onChanged: (val) => setState(() => _selectedCollege = val),
+                                  items: _colleges
+                                      .map((c) => DropdownMenuItem(
+                                          value: c, child: Text(c)))
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setState(() => _selectedCollege = val),
                                 ),
                                 const SizedBox(height: 16),
                               ],
@@ -374,9 +399,15 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   prefixIcon: const Icon(Icons.email_outlined),
                                   errorText: _emailError,
                                   // Show checkmark only if valid and no error
-                                  suffixIcon: _emailController.text.isNotEmpty && _emailError == null && ValidationService.validateEmail(_emailController.text) == null
-                                      ? const Icon(Icons.check_circle, color: Colors.green)
-                                      : null,
+                                  suffixIcon:
+                                      _emailController.text.isNotEmpty &&
+                                              _emailError == null &&
+                                              ValidationService.validateEmail(
+                                                      _emailController.text) ==
+                                                  null
+                                          ? const Icon(Icons.check_circle,
+                                              color: Colors.green)
+                                          : null,
                                 ),
                                 onChanged: (_) => setState(() {}),
                               ),
@@ -390,49 +421,62 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   labelText: 'Password',
                                   prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
-                                    icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                                    onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+                                    icon: Icon(_isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off),
+                                    onPressed: () => setState(() =>
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible),
                                   ),
                                   errorText: _passwordError,
                                 ),
                               ),
-                              
+
                               if (!isSignUp) ...[
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Row(
                                       children: [
                                         Checkbox(
-                                          value: _rememberMe, 
-                                          onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                                          value: _rememberMe,
+                                          onChanged: (v) => setState(
+                                              () => _rememberMe = v ?? false),
                                           visualDensity: VisualDensity.compact,
                                         ),
-                                        Text('Remember me', style: theme.textTheme.bodySmall),
+                                        Text('Remember me',
+                                            style: theme.textTheme.bodySmall),
                                       ],
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Forgot Password feature coming soon!')));
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(
+                                                    'Forgot Password feature coming soon!')));
                                       },
                                       child: const Text('Forgot Password?'),
                                     ),
                                   ],
                                 ),
                               ],
-                              
+
                               if (isSignUp) ...[
-                                 const SizedBox(height: 8),
-                                 _PasswordStrengthMeter(password: _passwordController.text),
+                                const SizedBox(height: 8),
+                                _PasswordStrengthMeter(
+                                    password: _passwordController.text),
                               ],
 
                               const SizedBox(height: 16),
-                              
+
                               if (isSignUp) ...[
                                 TextFormField(
                                   controller: _confirmPasswordController,
                                   validator: (val) {
-                                    if (val != _passwordController.text) return 'Passwords do not match';
+                                    if (val != _passwordController.text) {
+                                      return 'Passwords do not match';
+                                    }
                                     return null;
                                   },
                                   obscureText: !_isConfirmPasswordVisible,
@@ -440,57 +484,71 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                     labelText: 'Confirm Password',
                                     prefixIcon: const Icon(Icons.lock_outline),
                                     suffixIcon: IconButton(
-                                      icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
-                                      onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
+                                      icon: Icon(_isConfirmPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off),
+                                      onPressed: () => setState(() =>
+                                          _isConfirmPasswordVisible =
+                                              !_isConfirmPasswordVisible),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                
                                 CheckboxListTile(
                                   value: _acceptedTerms,
-                                  onChanged: (val) => setState(() => _acceptedTerms = val ?? false),
-                                  title: const Text('I accept the Terms & Conditions', style: TextStyle(fontSize: 12)),
-                                  controlAffinity: ListTileControlAffinity.leading,
+                                  onChanged: (val) => setState(
+                                      () => _acceptedTerms = val ?? false),
+                                  title: const Text(
+                                      'I accept the Terms & Conditions',
+                                      style: TextStyle(fontSize: 12)),
+                                  controlAffinity:
+                                      ListTileControlAffinity.leading,
                                   contentPadding: EdgeInsets.zero,
                                 ),
                               ],
-                              
+
                               const SizedBox(height: 24),
 
                               // Submit Button
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: _submit, // Loading handled by overlay
+                                  onPressed:
+                                      _submit, // Loading handled by overlay
                                   style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: Text(isSignUp ? 'Create Account' : 'Sign In'),
+                                  child: Text(
+                                      isSignUp ? 'Create Account' : 'Sign In'),
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 16),
-                              
+
                               // Google Sign In - kept but improved
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   onPressed: _handleGoogleSignIn,
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    side: BorderSide(color: theme.colorScheme.outline),
+                                    side: BorderSide(
+                                        color: theme.colorScheme.outline),
                                   ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.g_mobiledata, size: 28, color: theme.colorScheme.onSurface),
+                                      Icon(Icons.g_mobiledata,
+                                          size: 28,
+                                          color: theme.colorScheme.onSurface),
                                       const SizedBox(width: 8),
                                       Text(
                                         'Continue with Google',
@@ -510,7 +568,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                     ),
 
                     const SizedBox(height: 24),
-                    
+
                     // Demo & Guest Buttons
                     TextButton(
                       onPressed: _showGuestDialog,
@@ -521,7 +579,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
               ),
             ),
           ),
-          
+
           // Loading Overlay
           if (_localLoading)
             Container(
@@ -558,10 +616,10 @@ class _PasswordStrengthMeter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strength = ValidationService.getPasswordStrength(password);
-    
+
     Color color = Colors.red;
     String label = 'Weak';
-    
+
     if (strength > 0.6) {
       color = Colors.green;
       label = 'Strong';

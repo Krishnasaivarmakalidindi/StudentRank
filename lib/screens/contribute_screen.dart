@@ -29,24 +29,32 @@ class _ContributeScreenState extends State<ContributeScreen> {
   final _descriptionController = TextEditingController();
   final _textContentController = TextEditingController();
   final _linkController = TextEditingController();
-  
+
   final ResourceService _resourceService = ResourceService();
   final ActivityService _activityService = ActivityService();
   final StorageService _storageService = StorageService();
-  
+
   ResourceType _selectedType = ResourceType.notes;
   bool _isSubmitting = false;
   String? _selectedSubject;
-  
+
   // Content State
   final List<UploadedItem> _uploadedItems = [];
   bool _showTextInput = false;
   bool _showLinkInput = false;
 
   final List<String> _subjects = [
-    'Computer Science', 'Mathematics', 'Physics', 'Chemistry', 
-    'Electrical Engineering', 'Mechanical Engineering', 'Biology',
-    'Economics', 'History', 'Literature', 'Other'
+    'Computer Science',
+    'Mathematics',
+    'Physics',
+    'Chemistry',
+    'Electrical Engineering',
+    'Mechanical Engineering',
+    'Biology',
+    'Economics',
+    'History',
+    'Literature',
+    'Other'
   ];
 
   @override
@@ -80,10 +88,10 @@ class _ContributeScreenState extends State<ContributeScreen> {
   }
 
   bool get _isDirty {
-    return _titleController.text.isNotEmpty || 
-           _descriptionController.text.isNotEmpty || 
-           _selectedSubject != null ||
-           _uploadedItems.isNotEmpty;
+    return _titleController.text.isNotEmpty ||
+        _descriptionController.text.isNotEmpty ||
+        _selectedSubject != null ||
+        _uploadedItems.isNotEmpty;
   }
 
   void _handleCancel() {
@@ -100,10 +108,11 @@ class _ContributeScreenState extends State<ContributeScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); 
-                context.go(AppRoutes.main); 
+                Navigator.pop(context);
+                context.go(AppRoutes.main);
               },
-              child: const Text('Discard & Exit', style: TextStyle(color: Colors.red)),
+              child: const Text('Discard & Exit',
+                  style: TextStyle(color: Colors.red)),
             ),
           ],
         ),
@@ -122,7 +131,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
 
       if (result != null) {
         final file = result.files.single;
-        
+
         // Size validation (Max 10MB)
         if (file.size > 10 * 1024 * 1024) {
           if (mounted) {
@@ -168,7 +177,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final List<XFile> images = await ImagePicker().pickMultiImage();
+                    final List<XFile> images =
+                        await ImagePicker().pickMultiImage();
                     if (images.isNotEmpty) {
                       setState(() {
                         for (var image in images) {
@@ -187,7 +197,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
                   title: const Text('Take Photo'),
                   onTap: () async {
                     Navigator.pop(context);
-                    final XFile? photo = await ImagePicker().pickImage(source: ImageSource.camera);
+                    final XFile? photo = await ImagePicker()
+                        .pickImage(source: ImageSource.camera);
                     if (photo != null) {
                       setState(() {
                         _uploadedItems.add(UploadedItem(
@@ -240,12 +251,12 @@ class _ContributeScreenState extends State<ContributeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header
-                      Text('Share your knowledge', style: textStyles.headlineSmall?.bold),
+                      Text('Share your knowledge',
+                          style: textStyles.headlineSmall?.bold),
                       const SizedBox(height: 8),
-                      Text(
-                        'Upload quality content to earn reputation.', 
-                        style: textStyles.bodyMedium?.copyWith(color: colors.onSurfaceVariant)
-                      ),
+                      Text('Upload quality content to earn reputation.',
+                          style: textStyles.bodyMedium
+                              ?.copyWith(color: colors.onSurfaceVariant)),
                       const SizedBox(height: 32),
 
                       // 1. Content Type (Segmented Control)
@@ -257,20 +268,25 @@ class _ContributeScreenState extends State<ContributeScreen> {
                       // 2. Content Details
                       _buildSectionLabel('Content Details'),
                       const SizedBox(height: 12),
-                      
+
                       // Subject Dropdown
                       DropdownButtonFormField<String>(
-                        value: _selectedSubject,
+                        initialValue: _selectedSubject,
                         decoration: const InputDecoration(
                           labelText: 'Subject / Topic',
                           prefixIcon: Icon(Icons.class_outlined),
                         ),
-                        items: _subjects.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                        onChanged: (val) => setState(() => _selectedSubject = val),
-                        validator: (value) => value == null ? 'Please select a subject' : null,
+                        items: _subjects
+                            .map((s) =>
+                                DropdownMenuItem(value: s, child: Text(s)))
+                            .toList(),
+                        onChanged: (val) =>
+                            setState(() => _selectedSubject = val),
+                        validator: (value) =>
+                            value == null ? 'Please select a subject' : null,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Title Input
                       TextFormField(
                         controller: _titleController,
@@ -283,7 +299,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                         maxLength: 100,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Description Input
                       TextFormField(
                         controller: _descriptionController,
@@ -292,12 +308,15 @@ class _ContributeScreenState extends State<ContributeScreen> {
                           hintText: 'What does this content explain?',
                           alignLabelWithHint: true,
                           prefixIcon: Padding(
-                            padding: EdgeInsets.only(bottom: 60), 
+                            padding: EdgeInsets.only(bottom: 60),
                             child: Icon(Icons.description_outlined),
                           ),
                         ),
                         maxLines: 4,
-                        validator: (value) => value == null || value.trim().isEmpty ? 'Please enter a description' : null,
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                                ? 'Please enter a description'
+                                : null,
                         maxLength: 500,
                       ),
                       const SizedBox(height: 24),
@@ -305,17 +324,21 @@ class _ContributeScreenState extends State<ContributeScreen> {
                       // 3. Add Your Content
                       _buildSectionLabel('Add Your Content'),
                       const SizedBox(height: 12),
-                      
+
                       // Upload Buttons Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildUploadButton(Icons.picture_as_pdf, 'PDF', Colors.red, _pickPDF),
-                          _buildUploadButton(Icons.image, 'Images', Colors.purple, _pickImages),
-                          _buildUploadButton(Icons.text_fields, 'Text', Colors.blue, () {
+                          _buildUploadButton(Icons.picture_as_pdf, 'PDF',
+                              Colors.red, _pickPDF),
+                          _buildUploadButton(Icons.image, 'Images',
+                              Colors.purple, _pickImages),
+                          _buildUploadButton(
+                              Icons.text_fields, 'Text', Colors.blue, () {
                             setState(() => _showTextInput = !_showTextInput);
                           }),
-                          _buildUploadButton(Icons.link, 'Link', Colors.green, () {
+                          _buildUploadButton(Icons.link, 'Link', Colors.green,
+                              () {
                             setState(() => _showLinkInput = !_showLinkInput);
                           }),
                         ],
@@ -328,17 +351,21 @@ class _ContributeScreenState extends State<ContributeScreen> {
                           controller: _textContentController,
                           decoration: InputDecoration(
                             hintText: 'Paste your notes here...',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             suffixIcon: IconButton(
                               icon: const Icon(Icons.check_circle),
                               color: colors.primary,
                               onPressed: () {
-                                if (_textContentController.text.trim().isNotEmpty) {
+                                if (_textContentController.text
+                                    .trim()
+                                    .isNotEmpty) {
                                   setState(() {
                                     _uploadedItems.add(UploadedItem(
                                       type: UploadType.text,
                                       name: 'Text Content',
-                                      path: ValidationService.sanitizeInput(_textContentController.text),
+                                      path: ValidationService.sanitizeInput(
+                                          _textContentController.text),
                                       preview: _textContentController.text,
                                     ));
                                     _textContentController.clear();
@@ -365,7 +392,9 @@ class _ContributeScreenState extends State<ContributeScreen> {
                               onPressed: () {
                                 if (_linkController.text.trim().isNotEmpty) {
                                   // Simple validation
-                                  if (Uri.tryParse(_linkController.text)?.hasAbsolutePath ?? false) {
+                                  if (Uri.tryParse(_linkController.text)
+                                          ?.hasAbsolutePath ??
+                                      false) {
                                     setState(() {
                                       _uploadedItems.add(UploadedItem(
                                         type: UploadType.link,
@@ -377,7 +406,9 @@ class _ContributeScreenState extends State<ContributeScreen> {
                                     });
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter a valid URL')),
+                                      const SnackBar(
+                                          content:
+                                              Text('Please enter a valid URL')),
                                     );
                                   }
                                 }
@@ -392,11 +423,13 @@ class _ContributeScreenState extends State<ContributeScreen> {
                       if (_uploadedItems.isNotEmpty)
                         Container(
                           decoration: BoxDecoration(
-                            border: Border.all(color: colors.outline.withOpacity(0.5)),
+                            border: Border.all(
+                                color: colors.outline.withOpacity(0.5)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
-                            children: _uploadedItems.asMap().entries.map((entry) {
+                            children:
+                                _uploadedItems.asMap().entries.map((entry) {
                               final index = entry.key;
                               final item = entry.value;
                               return Column(
@@ -410,8 +443,11 @@ class _ContributeScreenState extends State<ContributeScreen> {
                                       ),
                                       child: Icon(item.icon, color: item.color),
                                     ),
-                                    title: Text(item.name, style: textStyles.titleSmall?.semiBold),
-                                    subtitle: item.size != null ? Text(item.size!) : null,
+                                    title: Text(item.name,
+                                        style: textStyles.titleSmall?.semiBold),
+                                    subtitle: item.size != null
+                                        ? Text(item.size!)
+                                        : null,
                                     trailing: IconButton(
                                       icon: const Icon(Icons.close, size: 20),
                                       onPressed: () {
@@ -422,7 +458,9 @@ class _ContributeScreenState extends State<ContributeScreen> {
                                     ),
                                   ),
                                   if (index < _uploadedItems.length - 1)
-                                    Divider(height: 1, color: colors.outline.withOpacity(0.2)),
+                                    Divider(
+                                        height: 1,
+                                        color: colors.outline.withOpacity(0.2)),
                                 ],
                               );
                             }).toList(),
@@ -435,7 +473,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                 ),
               ),
             ),
-            
+
             // Bottom Action Bar
             Container(
               padding: AppSpacing.paddingMd,
@@ -464,8 +502,14 @@ class _ContributeScreenState extends State<ContributeScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         child: _isSubmitting
-                            ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colors.onPrimary))
-                            : const Text('Submit Contribution', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: colors.onPrimary))
+                            : const Text('Submit Contribution',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -479,13 +523,11 @@ class _ContributeScreenState extends State<ContributeScreen> {
   }
 
   Widget _buildSectionLabel(String label) {
-    return Text(
-      label, 
-      style: Theme.of(context).textTheme.titleSmall?.bold.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        letterSpacing: 0.5,
-      )
-    );
+    return Text(label,
+        style: Theme.of(context).textTheme.titleSmall?.bold.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              letterSpacing: 0.5,
+            ));
   }
 
   Widget _buildSegmentedControl(ColorScheme colors) {
@@ -503,7 +545,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
           return Row(
             children: [
               _buildSegmentTab('Notes', ResourceType.notes, width),
-              _buildSegmentTab('Research Paper', ResourceType.researchPaper, width),
+              _buildSegmentTab(
+                  'Research Paper', ResourceType.researchPaper, width),
             ],
           );
         },
@@ -514,7 +557,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
   Widget _buildSegmentTab(String label, ResourceType type, double width) {
     final isSelected = _selectedType == type;
     final colors = Theme.of(context).colorScheme;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -528,13 +571,15 @@ class _ContributeScreenState extends State<ContributeScreen> {
         decoration: BoxDecoration(
           color: isSelected ? colors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: colors.shadow.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
-          ] : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: colors.shadow.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
         ),
         child: Center(
           child: Text(
@@ -549,7 +594,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
     );
   }
 
-  Widget _buildUploadButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildUploadButton(
+      IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -559,7 +605,9 @@ class _ContributeScreenState extends State<ContributeScreen> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               shape: BoxShape.circle,
-              border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+              border: Border.all(
+                  color:
+                      Theme.of(context).colorScheme.outline.withOpacity(0.5)),
               boxShadow: [
                 BoxShadow(
                   color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
@@ -596,34 +644,37 @@ class _ContributeScreenState extends State<ContributeScreen> {
     try {
       final appProvider = context.read<AppProvider>();
       final user = appProvider.currentUser;
-      
+
       if (user == null) {
-         if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Error: User not found.')),
-            );
-         }
-         return;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error: User not found.')),
+          );
+        }
+        return;
       }
 
       String? mainFileUrl;
       List<String> attachmentUrls = [];
       StringBuffer textContentBuffer = StringBuffer();
-      
+
       // Process uploaded items
       for (final item in _uploadedItems) {
         if (item.type == UploadType.text) {
-          if (textContentBuffer.isNotEmpty) textContentBuffer.writeln('\n---\n');
-          textContentBuffer.write(item.path); 
+          if (textContentBuffer.isNotEmpty) {
+            textContentBuffer.writeln('\n---\n');
+          }
+          textContentBuffer.write(item.path);
         } else if (item.type == UploadType.link) {
           attachmentUrls.add(item.path);
-        } else if (item.type == UploadType.pdf || item.type == UploadType.image) {
+        } else if (item.type == UploadType.pdf ||
+            item.type == UploadType.image) {
           // Upload file
           final file = File(item.path);
           if (await file.exists()) {
             final fileName = '${const Uuid().v4()}_${item.name}';
             final path = 'resources/${user.id}/$fileName';
-            
+
             final url = await _storageService.uploadFile(file, path);
             if (url != null) {
               attachmentUrls.add(url);
@@ -639,7 +690,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
       final resource = Resource(
         id: const Uuid().v4(),
         title: ValidationService.sanitizeInput(_titleController.text),
-        description: ValidationService.sanitizeInput(_descriptionController.text),
+        description:
+            ValidationService.sanitizeInput(_descriptionController.text),
         type: _selectedType,
         subject: _selectedSubject ?? 'Other',
         authorId: user.id,
@@ -652,7 +704,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
         isPlagiarized: false,
         fileUrl: mainFileUrl,
         attachmentUrls: attachmentUrls,
-        textContent: textContentBuffer.isNotEmpty ? textContentBuffer.toString() : null,
+        textContent:
+            textContentBuffer.isNotEmpty ? textContentBuffer.toString() : null,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -678,12 +731,13 @@ class _ContributeScreenState extends State<ContributeScreen> {
       }
 
       if (!mounted) return;
-      
+
       await showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          icon: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.tertiary, size: 48),
+          icon: Icon(Icons.check_circle,
+              color: Theme.of(context).colorScheme.tertiary, size: 48),
           title: const Text('Contribution Submitted!'),
           content: Text('You earned +$_estimatedReputation reputation points.'),
           actions: [
@@ -697,7 +751,6 @@ class _ContributeScreenState extends State<ContributeScreen> {
           ],
         ),
       );
-      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -732,19 +785,27 @@ class UploadedItem {
 
   IconData get icon {
     switch (type) {
-      case UploadType.pdf: return Icons.picture_as_pdf;
-      case UploadType.image: return Icons.image;
-      case UploadType.text: return Icons.text_fields;
-      case UploadType.link: return Icons.link;
+      case UploadType.pdf:
+        return Icons.picture_as_pdf;
+      case UploadType.image:
+        return Icons.image;
+      case UploadType.text:
+        return Icons.text_fields;
+      case UploadType.link:
+        return Icons.link;
     }
   }
 
   Color get color {
     switch (type) {
-      case UploadType.pdf: return Colors.red;
-      case UploadType.image: return Colors.purple;
-      case UploadType.text: return Colors.blue;
-      case UploadType.link: return Colors.green;
+      case UploadType.pdf:
+        return Colors.red;
+      case UploadType.image:
+        return Colors.purple;
+      case UploadType.text:
+        return Colors.blue;
+      case UploadType.link:
+        return Colors.green;
     }
   }
 }

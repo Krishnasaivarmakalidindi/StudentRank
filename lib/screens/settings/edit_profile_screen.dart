@@ -92,14 +92,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final user = context.read<AppProvider>().currentUser!;
       final file = File(pickedFile.path);
       final path = 'users/${user.id}/profile.jpg';
-      
+
       final url = await _storageService.uploadFile(file, path);
-      
+
       if (url != null) {
         final updatedUser = user.copyWith(profileImageUrl: url);
         await context.read<AppProvider>().updateUser(updatedUser);
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile picture updated!')),
           );
         }
@@ -132,7 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       await provider.updateUser(updatedUser);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully')),
@@ -161,13 +161,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveProfile,
-            child: _isLoading 
-              ? const SizedBox(
-                  width: 20, 
-                  height: 20, 
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text('Save', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text('Save',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary)),
           ),
         ],
       ),
@@ -184,12 +186,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      backgroundImage: user.profileImageUrl != null 
-                          ? NetworkImage(user.profileImageUrl!) 
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundImage: user.profileImageUrl != null
+                          ? NetworkImage(user.profileImageUrl!)
                           : null,
                       child: user.profileImageUrl == null
-                          ? Icon(Icons.person, size: 50, color: Theme.of(context).colorScheme.onSurfaceVariant)
+                          ? Icon(Icons.person,
+                              size: 50,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant)
                           : null,
                     ),
                     Positioned(
@@ -200,9 +207,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
+                          border: Border.all(
+                              color: Theme.of(context).colorScheme.surface,
+                              width: 2),
                         ),
-                        child: Icon(Icons.camera_alt, size: 16, color: Theme.of(context).colorScheme.onPrimary),
+                        child: Icon(Icons.camera_alt,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.onPrimary),
                       ),
                     ),
                   ],
@@ -224,13 +235,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _educationLevel,
+                initialValue: _educationLevel,
                 decoration: const InputDecoration(
                   labelText: 'Education Level',
                   prefixIcon: Icon(Icons.school_outlined),
                 ),
-                items: ['High School', 'Undergraduate', 'Postgraduate', 'PhD', 'Other']
-                    .map((level) => DropdownMenuItem(value: level, child: Text(level)))
+                items: [
+                  'High School',
+                  'Undergraduate',
+                  'Postgraduate',
+                  'PhD',
+                  'Other'
+                ]
+                    .map((level) =>
+                        DropdownMenuItem(value: level, child: Text(level)))
                     .toList(),
                 onChanged: (value) => setState(() => _educationLevel = value),
               ),

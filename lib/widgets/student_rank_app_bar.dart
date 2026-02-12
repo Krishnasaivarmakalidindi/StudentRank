@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:studentrank/theme.dart';
 
 class StudentRankAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -77,5 +76,6 @@ class StudentRankAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight + (bottomHeight ?? (bottom != null ? 48 : 0)));
+  Size get preferredSize => Size.fromHeight(
+      kToolbarHeight + (bottomHeight ?? (bottom != null ? 48 : 0)));
 }

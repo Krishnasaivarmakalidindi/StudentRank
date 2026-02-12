@@ -27,15 +27,19 @@ class AppProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final themeString = prefs.getString('theme_mode');
       if (themeString != null) {
-        if (themeString == 'light') _themeMode = ThemeMode.light;
-        else if (themeString == 'dark') _themeMode = ThemeMode.dark;
-        else _themeMode = ThemeMode.system;
+        if (themeString == 'light') {
+          _themeMode = ThemeMode.light;
+        } else if (themeString == 'dark')
+          _themeMode = ThemeMode.dark;
+        else
+          _themeMode = ThemeMode.system;
       }
     } catch (e) {
       debugPrint('Error loading theme: $e');
     }
 
-    _authSubscription = _userService.authStateChanges.listen((auth.User? firebaseUser) async {
+    _authSubscription =
+        _userService.authStateChanges.listen((auth.User? firebaseUser) async {
       if (firebaseUser == null) {
         _currentUser = null;
         _isLoading = false;
@@ -66,13 +70,13 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
 
       User? user = await _userService.getUserById(uid);
-      
-      // If user doc doesn't exist but we are auth'd, it might be a race condition 
-      // or initial creation lag. But generally we expect the doc to exist if 
-      // we are in a steady state. If it's a new signup, the signUp method 
-      // returns the user object directly, so we might not need to fetch immediately 
+
+      // If user doc doesn't exist but we are auth'd, it might be a race condition
+      // or initial creation lag. But generally we expect the doc to exist if
+      // we are in a steady state. If it's a new signup, the signUp method
+      // returns the user object directly, so we might not need to fetch immediately
       // there, but this listener catches app restarts.
-      
+
       _currentUser = user;
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
@@ -88,7 +92,8 @@ class AppProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
-      _currentUser = await _userService.signInWithEmailAndPassword(email, password);
+      _currentUser =
+          await _userService.signInWithEmailAndPassword(email, password);
     } catch (e) {
       rethrow;
     } finally {
@@ -97,11 +102,13 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> signUpWithEmailAndPassword(String email, String password, String name) async {
+  Future<void> signUpWithEmailAndPassword(
+      String email, String password, String name) async {
     try {
       _isLoading = true;
       notifyListeners();
-      _currentUser = await _userService.signUpWithEmailAndPassword(email, password, name);
+      _currentUser =
+          await _userService.signUpWithEmailAndPassword(email, password, name);
     } catch (e) {
       rethrow;
     } finally {
@@ -171,7 +178,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> updateReputationScore(int change) async {
     if (_currentUser == null) return;
-    
+
     await _userService.updateReputationScore(_currentUser!.id, change);
     // Refresh to get new level/score
     _currentUser = await _userService.getUserById(_currentUser!.id);
@@ -183,7 +190,7 @@ class AppProvider extends ChangeNotifier {
     _currentUser = await _userService.getUserById(_currentUser!.id);
     notifyListeners();
   }
-  
+
   Future<void> changeEmail(String newEmail, String password) async {
     try {
       _isLoading = true;
@@ -199,7 +206,8 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> changePassword(String currentPassword, String newPassword) async {
+  Future<void> changePassword(
+      String currentPassword, String newPassword) async {
     try {
       _isLoading = true;
       notifyListeners();
@@ -232,7 +240,7 @@ class AppProvider extends ChangeNotifier {
       final updatedUser = _currentUser!.copyWith(privacySettings: settings);
       _currentUser = updatedUser;
       notifyListeners(); // Optimistic update
-      
+
       await _userService.updatePrivacySettings(updatedUser.id, settings);
     } catch (e) {
       // Revert on failure
@@ -244,10 +252,11 @@ class AppProvider extends ChangeNotifier {
   Future<void> updateNotificationSettings(Map<String, bool> settings) async {
     if (_currentUser == null) return;
     try {
-      final updatedUser = _currentUser!.copyWith(notificationSettings: settings);
+      final updatedUser =
+          _currentUser!.copyWith(notificationSettings: settings);
       _currentUser = updatedUser;
       notifyListeners(); // Optimistic update
-      
+
       await _userService.updateNotificationSettings(updatedUser.id, settings);
     } catch (e) {
       // Revert on failure

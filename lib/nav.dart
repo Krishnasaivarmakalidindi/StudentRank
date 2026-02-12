@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/screens/auth_screen.dart';
@@ -29,7 +28,8 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.splash,
           name: 'splash',
-          pageBuilder: (context, state) => const NoTransitionPage(child: SplashScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: SplashScreen()),
         ),
         GoRoute(
           path: AppRoutes.auth,
@@ -39,12 +39,14 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.welcome,
           name: 'welcome',
-          pageBuilder: (context, state) => const NoTransitionPage(child: WelcomeScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: WelcomeScreen()),
         ),
         GoRoute(
           path: AppRoutes.main,
           name: 'main',
-          pageBuilder: (context, state) => const NoTransitionPage(child: MainScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: MainScreen()),
         ),
         GoRoute(
           path: AppRoutes.contribute,

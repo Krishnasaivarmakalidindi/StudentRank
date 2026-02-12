@@ -15,10 +15,11 @@ class GroupsScreen extends StatefulWidget {
   State<GroupsScreen> createState() => _GroupsScreenState();
 }
 
-class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderStateMixin {
+class _GroupsScreenState extends State<GroupsScreen>
+    with SingleTickerProviderStateMixin {
   final GroupService _groupService = GroupService();
   late TabController _tabController;
-  
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
@@ -73,7 +74,7 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
     if (!_formKey.currentState!.validate() || _selectedCategory == null) return;
 
     setState(() => _isCreating = true);
-    
+
     try {
       final groupId = await _groupService.createGroup(
         name: _nameController.text.trim(),
@@ -83,16 +84,16 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
 
       if (!mounted) return;
       Navigator.pop(context); // Close dialog
-      
+
       _nameController.clear();
       _descController.clear();
       setState(() {
         _selectedCategory = null;
         _isCreating = false;
       });
-      
+
       _tabController.animateTo(0); // Go to My Groups
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Group created successfully!'),
@@ -140,15 +141,18 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Category',
                       hintText: 'Select category',
                       border: OutlineInputBorder(),
                     ),
-                    items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                    items: _categories
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
                     onChanged: (val) => setState(() => _selectedCategory = val),
-                    validator: (value) => value == null ? 'Please select a category' : null,
+                    validator: (value) =>
+                        value == null ? 'Please select a category' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -172,8 +176,11 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
             ),
             ElevatedButton(
               onPressed: _isCreating ? null : _createGroup,
-              child: _isCreating 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+              child: _isCreating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
                   : const Text('Create'),
             ),
           ],
@@ -187,7 +194,9 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
     final appProvider = context.watch<AppProvider>();
     final user = appProvider.currentUser;
 
-    if (user == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       appBar: const StudentRankAppBar(title: 'Groups'),
@@ -200,7 +209,11 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+                  border: Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.5)),
                 ),
                 child: TabBar(
                   controller: _tabController,
@@ -211,7 +224,8 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerColor: Colors.transparent,
                   labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                  unselectedLabelColor:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
                   labelStyle: context.textStyles.labelLarge?.semiBold,
                   padding: const EdgeInsets.all(4),
                   tabs: const [
@@ -250,9 +264,9 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyState(
-            context, 
-            'No groups yet', 
-            'Browse groups and join one to get started', 
+            context,
+            'No groups yet',
+            'Browse groups and join one to get started',
             Icons.groups_2,
             action: ElevatedButton(
               onPressed: () => _tabController.animateTo(1),
@@ -309,9 +323,9 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return _buildEmptyState(
-                  context, 
-                  'No groups available', 
-                  'Be the first to create a study group', 
+                  context,
+                  'No groups available',
+                  'Be the first to create a study group',
                   Icons.group_add,
                 );
               }
@@ -323,7 +337,7 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
                 itemBuilder: (context, index) {
                   final group = snapshot.data![index];
                   final isMember = group.members.contains(userId);
-                  
+
                   return GroupCard(
                     group: group,
                     isMember: isMember,
@@ -339,18 +353,30 @@ class _GroupsScreenState extends State<GroupsScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, String title, String subtitle, IconData icon, {Widget? action}) {
+  Widget _buildEmptyState(
+      BuildContext context, String title, String subtitle, IconData icon,
+      {Widget? action}) {
     return Center(
       child: Padding(
         padding: AppSpacing.paddingXl,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+            Icon(icon,
+                size: 64,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant
+                    .withValues(alpha: 0.5)),
             const SizedBox(height: 16),
-            Text(title, style: context.textStyles.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(title,
+                style: context.textStyles.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 8),
-            Text(subtitle, style: context.textStyles.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), textAlign: TextAlign.center),
+            Text(subtitle,
+                style: context.textStyles.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center),
             if (action != null) ...[
               const SizedBox(height: 24),
               action,
