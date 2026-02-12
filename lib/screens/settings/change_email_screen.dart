@@ -32,10 +32,12 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     try {
       setState(() => _isLoading = true);
       await context.read<AppProvider>().changeEmail(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-      
+            _emailController.text.trim(),
+            context.read<AppProvider>().isPasswordAuth
+                ? _passwordController.text
+                : null,
+          );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email updated successfully')),
@@ -67,7 +69,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.lock_outline, size: 64, color: Theme.of(context).disabledColor),
+                Icon(Icons.lock_outline,
+                    size: 64, color: Theme.of(context).disabledColor),
                 const SizedBox(height: 16),
                 Text(
                   'Not Available',
@@ -78,8 +81,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                   'Guest and Demo accounts cannot change email settings. Please sign up for a full account.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
@@ -100,8 +103,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               Text(
                 'Current Email',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
               const SizedBox(height: 8),
               Container(
@@ -120,8 +123,8 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
               Text(
                 'New Email',
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -141,32 +144,37 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Confirm Password',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              if (context.watch<AppProvider>().isPasswordAuth) ...[
+                const SizedBox(height: 24),
+                Text(
+                  'Confirm Password',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  hintText: 'Verify your identity',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    hintText: 'Verify your identity',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
+                    ),
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
+              ],
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -175,9 +183,13 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: _isLoading 
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Update Email'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Update Email'),
                 ),
               ),
             ],

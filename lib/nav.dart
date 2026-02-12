@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/screens/auth_screen.dart';
-import 'package:studentrank/screens/splash_screen.dart';
+// SplashScreen import removed as it's not used directly anymore (used in AuthGate)
 import 'package:studentrank/screens/welcome_screen.dart';
 import 'package:studentrank/screens/main_screen.dart';
 import 'package:studentrank/screens/contribute_screen.dart';
@@ -18,6 +18,8 @@ import 'package:studentrank/screens/settings/about_screen.dart';
 import 'package:studentrank/screens/settings/help_screen.dart';
 import 'package:studentrank/screens/settings/language_screen.dart';
 
+import 'package:studentrank/widgets/auth_gate.dart';
+
 class AppRouter {
   static GoRouter createRouter(AppProvider appProvider) {
     return GoRouter(
@@ -26,11 +28,12 @@ class AppRouter {
       debugLogDiagnostics: true,
       routes: [
         GoRoute(
-          path: AppRoutes.splash,
+          path: AppRoutes.splash, // The root '/' path
           name: 'splash',
           pageBuilder: (context, state) =>
-              const NoTransitionPage(child: SplashScreen()),
+              const NoTransitionPage(child: AuthGate()),
         ),
+        // Auth route can still exist for explicit navigation, but AuthGate handles initial logic
         GoRoute(
           path: AppRoutes.auth,
           name: 'auth',
@@ -123,30 +126,22 @@ class AppRouter {
         ),
       ],
       redirect: (context, state) {
+        // Redirection logic simplified: AuthGate handles the root splash/auth/home decision
+        // We only need to protect other routes if somehow accessed directly
+
         final isLoggedIn = appProvider.isAuthenticated;
-        final isLoading = appProvider.isLoading;
-        final isSplash = state.matchedLocation == AppRoutes.splash;
-        final isAuth = state.matchedLocation == AppRoutes.auth;
-        final isWelcome = state.matchedLocation == AppRoutes.welcome;
+        final isAuthRoute = state.matchedLocation == AppRoutes.auth ||
+            state.matchedLocation == AppRoutes.welcome ||
+            state.matchedLocation == AppRoutes.splash;
 
-        // Still loading? Stay on splash
-        if (isLoading) return AppRoutes.splash;
-
-        // If on splash and not loading
-        if (isSplash) {
-          return isLoggedIn ? AppRoutes.main : AppRoutes.welcome;
+        // If trying to access protected route (anything not in isAuthRoute)
+        // and not logged in, redirect to auth/welcome
+        if (!isLoggedIn && !isAuthRoute) {
+          return AppRoutes.auth;
         }
 
-        // If on welcome but logged in -> main
-        if (isWelcome && isLoggedIn) return AppRoutes.main;
-
-        // If on auth but logged in -> main
-        if (isAuth && isLoggedIn) return AppRoutes.main;
-
-        // If trying to access protected route (main, etc) but not logged in -> welcome
-        // Note: We allow welcome and auth to be accessed without login
-        final isProtectedRoute = !isAuth && !isWelcome && !isSplash;
-        if (isProtectedRoute && !isLoggedIn) return AppRoutes.welcome;
+        // We do NOT redirect FROM splash/auth TO main here, because AuthGate does that.
+        // If we did, it might fight with AuthGate or cause loops.
 
         return null;
       },

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:studentrank/nav.dart';
+// import 'package:studentrank/nav.dart'; // Removed
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/validation_service.dart';
 import 'package:studentrank/theme.dart';
@@ -129,10 +128,10 @@ class _AuthScreenState extends State<AuthScreen>
           _passwordController.text.trim(),
         );
       }
-      // Explicit navigation if redirect doesn't happen fast enough
-      if (mounted) {
-        context.go(AppRoutes.main);
-      }
+      // Explicit navigation handled by AuthGate
+      // if (mounted) {
+      //   context.go(AppRoutes.main);
+      // }
     } catch (e) {
       if (!mounted) return;
       setState(() => _localLoading = false);
@@ -180,7 +179,8 @@ class _AuthScreenState extends State<AuthScreen>
     setState(() => _localLoading = true);
     try {
       await context.read<AppProvider>().signInWithGoogle();
-      if (mounted) context.go(AppRoutes.main);
+      // AuthGate handles navigation
+      // if (mounted) context.go(AppRoutes.main);
     } catch (e) {
       if (mounted) {
         setState(() => _localLoading = false);
@@ -247,7 +247,8 @@ class _AuthScreenState extends State<AuthScreen>
                         _nameController.text.trim(),
                         _educationLevel,
                       );
-                  if (mounted) context.go(AppRoutes.main);
+                  // AuthGate handles navigation
+                  // if (mounted) context.go(AppRoutes.main);
                 } catch (e) {
                   if (context.mounted) {
                     setState(() => _localLoading = false);
