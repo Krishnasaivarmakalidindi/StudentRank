@@ -179,8 +179,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                       ),
                       validator: (v) {
                         if (v == null || v.isEmpty) return 'Required';
-                        if (v.length < 6)
+                        if (v.length < 6) {
                           return 'Must be at least 6 characters';
+                        }
                         return null;
                       },
                     ),
@@ -200,8 +201,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
                         ),
                       ),
                       validator: (v) {
-                        if (v != _newPasswordController.text)
+                        if (v != _newPasswordController.text) {
                           return 'Passwords do not match';
+                        }
                         return null;
                       },
                     ),
