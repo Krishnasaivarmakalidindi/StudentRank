@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:studentrank/models/activity.dart';
 import 'package:studentrank/theme.dart';
@@ -10,47 +11,43 @@ class ActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = _getActivityIcon();
-    final color = _getActivityColor(context);
+    final iconData = _getActivityIcon();
+    final accentColor = _getActivityColor();
 
     return Container(
-      padding: AppSpacing.paddingMd,
-      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.05),
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              color:
+                  accentColor.withOpacity(0.2), // Transparent bg matching icon
+              shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 20, color: color),
+            child: Icon(iconData, size: 20, color: accentColor),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(activity.title, style: context.textStyles.titleSmall?.semiBold, maxLines: 2, overflow: TextOverflow.ellipsis),
+                _buildRichTitle(context, accentColor),
                 const SizedBox(height: 4),
-                Text(activity.description, style: context.textStyles.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), maxLines: 2, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (activity.reputationChange > 0) ...[
-                      Icon(Icons.trending_up, size: 14, color: Theme.of(context).colorScheme.tertiary),
-                      const SizedBox(width: 4),
-                      Text('+${activity.reputationChange}', style: context.textStyles.labelSmall?.semiBold.copyWith(color: Theme.of(context).colorScheme.tertiary)),
-                      const SizedBox(width: 12),
-                    ],
-                    Text(DateFormat('MMM dd, yyyy').format(activity.createdAt), style: context.textStyles.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                  ],
+                Text(
+                  _getTimeAgo(activity.createdAt),
+                  style: GoogleFonts.inter(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -60,33 +57,80 @@ class ActivityCard extends StatelessWidget {
     );
   }
 
+  Widget _buildRichTitle(BuildContext context, Color color) {
+    // Basic logic to bold specific parts based on activity type
+    // This replicates "Earned +20 points for Note Upload" style
+
+    if (activity.type == ActivityType.upload) {
+      return RichText(
+        text: TextSpan(
+          style: GoogleFonts.inter(
+              color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+          children: [
+            const TextSpan(text: 'Earned '),
+            TextSpan(
+                text: '+${activity.reputationChange} points',
+                style: TextStyle(
+                    color: AppColors.primaryLight,
+                    fontWeight: FontWeight.bold)),
+            const TextSpan(text: ' for Note Upload'),
+          ],
+        ),
+      );
+    }
+
+    // Default fallback
+    return Text(
+      activity.title,
+      style: GoogleFonts.inter(
+        color: Colors.white,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
   IconData _getActivityIcon() {
     switch (activity.type) {
       case ActivityType.upload:
-        return Icons.upload_file;
+        return Icons.add_circle_outline;
       case ActivityType.improve:
-        return Icons.edit;
+        return Icons.chat_bubble_outline;
       case ActivityType.answer:
         return Icons.question_answer;
       case ActivityType.achievement:
-        return Icons.emoji_events;
+        return Icons.star_border; // Yellow star
       case ActivityType.join:
         return Icons.group_add;
     }
   }
 
-  Color _getActivityColor(BuildContext context) {
+  Color _getActivityColor() {
     switch (activity.type) {
       case ActivityType.upload:
-        return Theme.of(context).colorScheme.primary;
+        return AppColors.primaryLight; // Blue
       case ActivityType.improve:
-        return Colors.orange.shade700;
+        return AppColors.accentPurple; // Purple
       case ActivityType.answer:
-        return Colors.blue.shade600;
+        return AppColors.accentGreen;
       case ActivityType.achievement:
-        return Theme.of(context).colorScheme.tertiary;
+        return AppColors.accentOrange; // Gold/Yellow
       case ActivityType.join:
-        return Colors.purple.shade600;
+        return AppColors.accentCyan;
+    }
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inHours < 24) {
+      if (diff.inHours == 0) return '${diff.inMinutes} minutes ago';
+      return '${diff.inHours} hours ago';
+    } else if (diff.inDays == 1) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('MMM dd').format(dateTime);
     }
   }
 }

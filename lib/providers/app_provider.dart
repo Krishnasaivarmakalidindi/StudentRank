@@ -15,7 +15,7 @@ class AppProvider extends ChangeNotifier {
   bool _isCreatingProfile =
       false; // Guard against race conditions during sign-up/recovery
   StreamSubscription<auth.User?>? _authSubscription;
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -42,10 +42,11 @@ class AppProvider extends ChangeNotifier {
       if (themeString != null) {
         if (themeString == 'light') {
           _themeMode = ThemeMode.light;
-        } else if (themeString == 'dark')
+        } else if (themeString == 'dark') {
           _themeMode = ThemeMode.dark;
-        else
-          _themeMode = ThemeMode.system;
+        } else {
+          _themeMode = ThemeMode.dark; // Default to Dark instead of System
+        }
       }
     } catch (e) {
       debugPrint('Error loading theme: $e');

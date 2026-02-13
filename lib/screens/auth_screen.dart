@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 // import 'package:studentrank/nav.dart'; // Removed
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/validation_service.dart';
-import 'package:studentrank/theme.dart';
+// import 'package:studentrank/theme.dart'; // Removed unused import
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -280,10 +280,10 @@ class _AuthScreenState extends State<AuthScreen>
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Logo
-                    const Icon(
+                    Icon(
                       Icons.school_rounded,
                       size: 64,
-                      color: LightModeColors.lightPrimary,
+                      color: theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
                     Text(

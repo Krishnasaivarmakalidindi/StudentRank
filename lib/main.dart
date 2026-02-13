@@ -12,10 +12,10 @@ import 'nav.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
+
   // Initialize default groups (fire and forget)
   GroupService().initializeDefaultGroups();
-  
+
   runApp(const MyApp());
 }
 
@@ -46,8 +46,8 @@ class MyAppContent extends StatelessWidget {
     return MaterialApp.router(
       title: 'StudentRank',
       debugShowCheckedModeBanner: false,
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: appProvider.themeMode,
       routerConfig: router,
     );

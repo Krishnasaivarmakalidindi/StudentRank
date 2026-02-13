@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/activity_service.dart';
 import 'package:studentrank/theme.dart';
 import 'package:studentrank/widgets/reputation_card.dart';
-import 'package:studentrank/widgets/quick_action_button.dart';
 import 'package:studentrank/widgets/activity_card.dart';
-import 'package:studentrank/widgets/verified_badge.dart';
-import 'package:studentrank/widgets/student_rank_app_bar.dart';
+
+// import 'package:studentrank/models/activity.dart'; // duplicate removed
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ActivityService _activityService = ActivityService();
-  
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning';
@@ -29,137 +29,171 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch provider for user data
     final appProvider = context.watch<AppProvider>();
     final user = appProvider.currentUser;
 
+    // Loading State
     if (user == null) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: AppColors.deepNavy,
+        body:
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
       );
     }
 
     return Scaffold(
-      appBar: StudentRankAppBar(
-        title: 'StudentRank',
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: InkWell(
-              onTap: () => context.go('/profile'),
-              borderRadius: BorderRadius.circular(20),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  user.name.substring(0, 1).toUpperCase(),
-                  style: context.textStyles.titleSmall?.bold.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.deepNavy,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
             await appProvider.refreshUser();
           },
+          color: AppColors.primary,
+          backgroundColor: AppColors.cardSurface,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: AppSpacing.paddingLg,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${_getGreeting()}, ${user.name.split(' ').first}',
-                      style: context.textStyles.headlineSmall?.bold,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            user.collegeName ?? 'No College Set',
-                            style: context.textStyles.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (user.isVerified) ...[
-                          const SizedBox(width: 6),
-                          const VerifiedBadge(size: 16),
-                        ],
-                      ],
-                    ),
-                  ],
+                // 1. Header
+                _buildHeader(context, user),
+
+                const SizedBox(height: 32),
+
+                // 2. Greeting
+                Text(
+                  '${_getGreeting()},\n${user.name.split(' ').first}',
+                  style: GoogleFonts.outfit(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.1,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                RichText(
+                  text: TextSpan(
+                    text: 'Your next achievement is within reach! ',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      color: AppColors.accentCyan,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: const [
+                      TextSpan(text: '🚀'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // 3. Reputation Card
                 ReputationCard(
                   reputationScore: user.reputationScore,
                   rank: user.collegeRank,
                   level: user.level,
-                  subject: user.subjects.isNotEmpty ? user.subjects.first : 'General',
+                  subject: user.subjects.isNotEmpty
+                      ? user.subjects.first
+                      : 'General',
                 ),
-                const SizedBox(height: 24),
-                Text('Quick Actions', style: context.textStyles.titleLarge?.semiBold),
+
+                const SizedBox(height: 32),
+
+                // 4. Rank Faster Grid
+                Text(
+                  'Rank Faster',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 GridView.count(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 1.3,
+                  mainAxisSpacing: 16, // Increased spacing
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.1, // Adjusted for content
                   children: [
-                    QuickActionButton(
-                      icon: Icons.upload_file,
+                    _buildActionCard(
+                      context,
+                      icon: Icons.upload_file_rounded,
                       label: 'Upload Notes',
-                      iconColor: Theme.of(context).colorScheme.primary,
+                      subLabel: 'Claim +50 Points',
+                      subLabelColor: AppColors.accentGreen,
+                      iconBgColor: AppColors.primary.withOpacity(0.2), // Blue
+                      iconColor: AppColors.primary,
                       onTap: () => context.go('/contribute'),
                     ),
-                    QuickActionButton(
-                      icon: Icons.groups,
-                      label: 'Study Groups',
-                      iconColor: Colors.purple.shade600,
+                    _buildActionCard(
+                      context,
+                      icon: Icons.groups_rounded,
+                      label: 'Collab Now',
+                      subLabel: '12 peers online',
+                      subLabelColor: AppColors.textSecondary,
+                      iconBgColor: AppColors.accentPurple.withOpacity(0.2),
+                      iconColor: AppColors.accentPurple,
                       onTap: () => context.go('/groups'),
                     ),
-                    QuickActionButton(
-                      icon: Icons.quiz,
-                      label: 'Take Challenge',
-                      iconColor: Colors.orange.shade700,
+                    _buildActionCard(
+                      context,
+                      icon: Icons.emoji_events_rounded,
+                      label: 'Boost Your Score',
+                      subLabel: '2x Multiplier Active',
+                      subLabelColor: AppColors.accentOrange,
+                      iconBgColor: AppColors.accentOrange.withOpacity(0.2),
+                      iconColor: AppColors.accentOrange,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Challenges coming soon!')),
+                          const SnackBar(
+                              content: Text('Multipliers coming soon!')),
                         );
                       },
                     ),
-                    QuickActionButton(
-                      icon: Icons.psychology,
-                      label: 'Ask AI',
-                      iconColor: Colors.indigo.shade600,
+                    _buildActionCard(
+                      context,
+                      icon: Icons.auto_awesome,
+                      label: 'Smart Help',
+                      subLabel: 'Solve instantly',
+                      subLabelColor: AppColors.textSecondary,
+                      iconBgColor: AppColors.accentGreen.withOpacity(0.2),
+                      iconColor: AppColors.accentGreen,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('AI assistant coming soon!')),
+                          const SnackBar(content: Text('AI Help coming soon!')),
                         );
                       },
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 32),
+
+                // 5. Activity Feed
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Recent Activity', style: context.textStyles.titleLarge?.semiBold),
+                    Text(
+                      'Your Progress',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                     TextButton(
                       onPressed: () => context.go('/profile'),
-                      child: const Text('View All'),
+                      child: Text(
+                        'View History',
+                        style: GoogleFonts.inter(
+                          color: AppColors.primaryLight,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -168,58 +202,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   future: _activityService.getFeedActivities(limit: 5),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary));
                     }
-
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return _buildEmptyState(context);
                     }
-
-                    return ListView.builder(
+                    return ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) => ActivityCard(activity: snapshot.data![index]),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) =>
+                          ActivityCard(activity: snapshot.data![index]),
                     );
                   },
                 ),
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  padding: AppSpacing.paddingLg,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Theme.of(context).colorScheme.primaryContainer,
-                        Theme.of(context).colorScheme.tertiaryContainer,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.rocket_launch, size: 32, color: Theme.of(context).colorScheme.primary),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text('Contribute something today', style: context.textStyles.titleLarge?.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text('Share your knowledge and earn reputation points', style: context.textStyles.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => context.go('/contribute'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Start Contributing'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
+                // Extra padding for bottom nav
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -228,17 +230,150 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildHeader(BuildContext context, dynamic user) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: const BoxDecoration(
+            color: AppColors.primary, // Blue background for logo
+            shape: BoxShape.circle,
+          ),
+          child:
+              const Icon(Icons.school_rounded, color: Colors.white, size: 24),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'StudentRank',
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const Spacer(),
+        Stack(
+          children: [
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.notifications,
+                  color: Colors.white, size: 28), // Filled icon
+            ),
+            Positioned(
+              right: 12,
+              top: 12,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.deepNavy, width: 2), // Ring effect
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: () => context.go('/profile'),
+          borderRadius: BorderRadius.circular(20),
+          child: CircleAvatar(
+            radius: 20,
+            backgroundColor:
+                const Color(0xFFFFCC80), // Peach/Skin tone avatar bg usually
+            child: const Icon(Icons.person,
+                color: Colors.black, size: 24), // Simple avatar for now
+            // In real app, use user.profileImageUrl or Initials
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String subLabel,
+    required Color subLabelColor,
+    required Color iconBgColor,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.cardSurface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.05),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: iconBgColor,
+                  borderRadius:
+                      BorderRadius.circular(16), // Rounded square/circle hybrid
+                ),
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+              const Spacer(),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subLabel,
+                style: GoogleFonts.inter(
+                  color: subLabelColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: AppSpacing.paddingXl,
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Center(
         child: Column(
           children: [
-            Icon(Icons.history, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text('No recent activity', style: context.textStyles.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 8),
-            Text('Start contributing to see your activity here', style: context.textStyles.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), textAlign: TextAlign.center),
+            Icon(Icons.history, size: 48, color: Colors.white.withOpacity(0.2)),
+            const SizedBox(height: 12),
+            Text(
+              'No recent activity',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),
