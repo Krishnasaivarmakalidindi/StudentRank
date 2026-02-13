@@ -115,6 +115,7 @@ class AppColors {
 
   // Neutral
   static const neutral50 = Color(0xFFF9FAFB);
+  static const neutral100 = Color(0xFFF3F4F6);
   static const neutral200 = Color(0xFFE5E7EB);
   static const neutral300 = Color(0xFFD1D5DB);
   static const neutral400 = Color(0xFF9CA3AF);
@@ -126,7 +127,14 @@ class AppColors {
   static const textPrimary = Color(0xFF111827);
   static const textSecondary = Color(0xFF4B5563);
   static const textLight = Color(0xFFF9FAFB); // White/Off-white for dark mode
-  static const textLightSecondary = Color(0xFF9CA3AF); // Gray for dark mode
+
+  // Light Mode Colors (Screenshot)
+  static const lightBackground = Color(0xFFF1F5F9); // Very light blue-grey
+  static const lightSurface = Color(0xFFFFFFFF);
+  static const lightTextPrimary = Color(0xFF111827); // Almost black
+  static const lightTextSecondary = Color(0xFF6B7280); // Grey
+  static const lightCardShadow = Color(0x0D000000); // Very subtle shadow
+  static const lightPrimary = Color(0xFF0EA5E9); // Sky Blue / Cyan (Ask AI)
 }
 
 /// Font size constants
@@ -153,12 +161,66 @@ class FontSizes {
 // =============================================================================
 
 class AppTheme {
-  /// Light theme with modern, neutral aesthetic
+  /// Light theme with modern, clean aesthetic
   static ThemeData get lightTheme {
-    // For now, we are enforcing the Premium Dark Dashboard aesthetic
-    // So "Light Theme" will effectively be the same as Dark Theme
-    // This ensures users see the new UI regardless of system settings.
-    return darkTheme;
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.lightBackground,
+      colorScheme: ColorScheme.light(
+        primary: AppColors.primary,
+        onPrimary: Colors.white,
+        secondary: AppColors.secondary,
+        surface: AppColors.lightSurface,
+        onSurface: AppColors.lightTextPrimary,
+        surfaceContainerHighest: AppColors.neutral100,
+        outline: AppColors.neutral200,
+        shadow: AppColors.lightCardShadow,
+      ),
+      textTheme: _buildTextTheme(Brightness.light),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.lightTextPrimary,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+      ),
+      cardTheme: CardThemeData(
+        elevation: 2,
+        shadowColor: AppColors.lightCardShadow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: AppColors.lightSurface,
+        margin: EdgeInsets.zero,
+        surfaceTintColor: Colors.transparent,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.neutral200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.neutral200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
   }
 
   /// Dark theme with good contrast and readability

@@ -13,23 +13,33 @@ class ActivityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final iconData = _getActivityIcon();
     final accentColor = _getActivityColor();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardSurface,
+        color: isDark ? AppColors.cardSurface : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.05),
-        ),
+        border:
+            isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: AppColors.lightCardShadow,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color:
-                  accentColor.withOpacity(0.2), // Transparent bg matching icon
+              color: isDark
+                  ? accentColor.withOpacity(0.2)
+                  : accentColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(iconData, size: 20, color: accentColor),
@@ -44,7 +54,9 @@ class ActivityCard extends StatelessWidget {
                 Text(
                   _getTimeAgo(activity.createdAt),
                   style: GoogleFonts.inter(
-                    color: AppColors.textSecondary,
+                    color: isDark
+                        ? AppColors.textSecondary
+                        : AppColors.lightTextSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -58,6 +70,9 @@ class ActivityCard extends StatelessWidget {
   }
 
   Widget _buildRichTitle(BuildContext context, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.lightTextPrimary;
+
     // Basic logic to bold specific parts based on activity type
     // This replicates "Earned +20 points for Note Upload" style
 
@@ -65,13 +80,13 @@ class ActivityCard extends StatelessWidget {
       return RichText(
         text: TextSpan(
           style: GoogleFonts.inter(
-              color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+              color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
           children: [
             const TextSpan(text: 'Earned '),
             TextSpan(
                 text: '+${activity.reputationChange} points',
                 style: TextStyle(
-                    color: AppColors.primaryLight,
+                    color: isDark ? AppColors.primaryLight : AppColors.primary,
                     fontWeight: FontWeight.bold)),
             const TextSpan(text: ' for Note Upload'),
           ],
@@ -83,7 +98,7 @@ class ActivityCard extends StatelessWidget {
     return Text(
       activity.title,
       style: GoogleFonts.inter(
-        color: Colors.white,
+        color: textColor,
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),

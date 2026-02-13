@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.deepNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -68,21 +68,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     height: 1.1,
                   ),
                 ),
                 const SizedBox(height: 8),
                 RichText(
                   text: TextSpan(
-                    text: 'Your next achievement is within reach! ',
+                    text: Theme.of(context).brightness == Brightness.dark
+                        ? 'Your next achievement is within reach! '
+                        : 'Ready to boost your rank today? ',
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      color: AppColors.accentCyan,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.accentCyan
+                          : AppColors.lightTextSecondary,
                       fontWeight: FontWeight.w500,
                     ),
-                    children: const [
-                      TextSpan(text: '🚀'),
+                    children: [
+                      if (Theme.of(context).brightness == Brightness.dark)
+                        const TextSpan(text: '🚀'),
                     ],
                   ),
                 ),
@@ -103,11 +108,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // 4. Rank Faster Grid
                 Text(
-                  'Rank Faster',
+                  Theme.of(context).brightness == Brightness.dark
+                      ? 'Rank Faster'
+                      : 'Quick Actions',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -123,45 +130,94 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       icon: Icons.upload_file_rounded,
                       label: 'Upload Notes',
-                      subLabel: 'Claim +50 Points',
-                      subLabelColor: AppColors.accentGreen,
-                      iconBgColor: AppColors.primary.withOpacity(0.2), // Blue
+                      subLabel: Theme.of(context).brightness == Brightness.dark
+                          ? 'Claim +50 Points'
+                          : 'Share knowledge',
+                      subLabelColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.accentGreen
+                              : AppColors.lightTextSecondary,
+                      iconBgColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.primary.withOpacity(0.2)
+                              : Colors.blue.shade50,
                       iconColor: AppColors.primary,
                       onTap: () => context.go('/contribute'),
                     ),
                     _buildActionCard(
                       context,
                       icon: Icons.groups_rounded,
-                      label: 'Collab Now',
-                      subLabel: '12 peers online',
-                      subLabelColor: AppColors.textSecondary,
-                      iconBgColor: AppColors.accentPurple.withOpacity(0.2),
-                      iconColor: AppColors.accentPurple,
+                      label: Theme.of(context).brightness == Brightness.dark
+                          ? 'Collab Now'
+                          : 'Study Groups',
+                      subLabel: Theme.of(context).brightness == Brightness.dark
+                          ? '12 peers online'
+                          : 'Join classmates',
+                      subLabelColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.textSecondary
+                              : AppColors.lightTextSecondary,
+                      iconBgColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.accentPurple.withOpacity(0.2)
+                              : Colors.orange.shade50,
+                      iconColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.accentPurple
+                          : Colors.orange.shade800,
                       onTap: () => context.go('/groups'),
                     ),
                     _buildActionCard(
                       context,
-                      icon: Icons.emoji_events_rounded,
-                      label: 'Boost Your Score',
-                      subLabel: '2x Multiplier Active',
-                      subLabelColor: AppColors.accentOrange,
-                      iconBgColor: AppColors.accentOrange.withOpacity(0.2),
-                      iconColor: AppColors.accentOrange,
+                      icon: Theme.of(context).brightness == Brightness.dark
+                          ? Icons.emoji_events_rounded
+                          : Icons.quiz,
+                      label: Theme.of(context).brightness == Brightness.dark
+                          ? 'Boost Your Score'
+                          : 'Daily Quiz',
+                      subLabel: Theme.of(context).brightness == Brightness.dark
+                          ? '2x Multiplier Active'
+                          : 'Keep the streak',
+                      subLabelColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.accentOrange
+                              : AppColors.lightTextSecondary,
+                      iconBgColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.accentOrange.withOpacity(0.2)
+                              : Colors.green.shade50,
+                      iconColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.accentOrange
+                          : Colors.green.shade700,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Multipliers coming soon!')),
+                          const SnackBar(content: Text('Quizzes coming soon!')),
                         );
                       },
                     ),
                     _buildActionCard(
                       context,
-                      icon: Icons.auto_awesome,
-                      label: 'Smart Help',
-                      subLabel: 'Solve instantly',
-                      subLabelColor: AppColors.textSecondary,
-                      iconBgColor: AppColors.accentGreen.withOpacity(0.2),
-                      iconColor: AppColors.accentGreen,
+                      icon: Theme.of(context).brightness == Brightness.dark
+                          ? Icons.auto_awesome
+                          : Icons.smart_toy,
+                      label: Theme.of(context).brightness == Brightness.dark
+                          ? 'Smart Help'
+                          : 'Ask AI',
+                      subLabel: Theme.of(context).brightness == Brightness.dark
+                          ? 'Solve instantly'
+                          : 'Instant answers',
+                      subLabelColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.textSecondary
+                              : Colors.white.withOpacity(0.9),
+                      iconBgColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.accentGreen.withOpacity(0.2)
+                              : Colors.white.withOpacity(0.2),
+                      iconColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.accentGreen
+                          : Colors.white,
+                      isPrimaryCard:
+                          Theme.of(context).brightness == Brightness.light,
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('AI Help coming soon!')),
@@ -178,17 +234,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Your Progress',
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 'Your Progress'
+                          : 'Recent Activity',
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     TextButton(
                       onPressed: () => context.go('/profile'),
                       child: Text(
-                        'View History',
+                        Theme.of(context).brightness == Brightness.dark
+                            ? 'View History'
+                            : 'See all',
                         style: GoogleFonts.inter(
                           color: AppColors.primaryLight,
                           fontWeight: FontWeight.w600,
@@ -231,6 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context, dynamic user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Container(
@@ -249,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const Spacer(),
@@ -257,8 +318,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             IconButton(
               onPressed: () {},
-              icon: const Icon(Icons.notifications,
-                  color: Colors.white, size: 28), // Filled icon
+              icon: Icon(Icons.notifications,
+                  color: isDark ? Colors.white : AppColors.lightTextPrimary,
+                  size: 28), // Filled icon
             ),
             Positioned(
               right: 12,
@@ -267,10 +329,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: AppColors.error,
+                  color: isDark
+                      ? AppColors.error
+                      : AppColors.primary, // Red/Blue dot
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: AppColors.deepNavy, width: 2), // Ring effect
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      width: 2), // Ring effect
                 ),
               ),
             ),
@@ -302,7 +367,10 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconBgColor,
     required Color iconColor,
     required VoidCallback onTap,
+    bool isPrimaryCard = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -311,12 +379,22 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.cardSurface,
+            color: isPrimaryCard
+                ? AppColors.primary
+                : (isDark ? AppColors.cardSurface : Colors.white),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.05),
-              width: 1,
-            ),
+            border: isDark
+                ? Border.all(color: Colors.white.withOpacity(0.05), width: 1)
+                : null,
+            boxShadow: isDark || isPrimaryCard
+                ? null
+                : [
+                    BoxShadow(
+                      color: AppColors.lightCardShadow,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +412,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 label,
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: isPrimaryCard
+                      ? Colors.white
+                      : Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),

@@ -20,24 +20,35 @@ class ReputationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Mock progress for visual match
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            AppColors.reputationGradientStart,
-            AppColors.reputationGradientEnd
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: isDark ? null : Colors.white,
+        gradient: isDark
+            ? const LinearGradient(
+                colors: [
+                  AppColors.reputationGradientStart,
+                  AppColors.reputationGradientEnd
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
+          isDark
+              ? BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              : BoxShadow(
+                  color: AppColors.lightCardShadow,
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
         ],
       ),
       child: Stack(
@@ -54,31 +65,35 @@ class ReputationCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'REPUTATION SCORE',
+                      'Current Reputation',
                       style: GoogleFonts.inter(
-                        color: Colors.white.withOpacity(0.7),
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.7)
+                            : AppColors.lightTextSecondary,
+                        fontSize: 14,
+                        fontWeight: isDark ? FontWeight.bold : FontWeight.w600,
+                        letterSpacing: isDark ? 1.2 : 0,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark
+                            ? Colors.white
+                            : AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.emoji_events,
-                              color: Colors.amber, size: 16),
+                          Icon(Icons.emoji_events,
+                              color: isDark ? Colors.amber : AppColors.primary,
+                              size: 16),
                           const SizedBox(width: 6),
                           Text(
-                            'SILVER II',
+                            'SILVER II', // Screenshot says SILVER III, sticking to mock
                             style: GoogleFonts.inter(
-                              color:
-                                  AppColors.primary, // Blue text in white pill
+                              color: AppColors.primary,
                               fontWeight: FontWeight.w900,
                               fontSize: 12,
                             ),
@@ -92,14 +107,30 @@ class ReputationCard extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Big Score
-                Text(
-                  '1,250',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 56,
-                    fontWeight: FontWeight.bold,
-                    height: 1.0,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '1,250',
+                      style: GoogleFonts.outfit(
+                        color:
+                            isDark ? Colors.white : AppColors.lightTextPrimary,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'PTS',
+                      style: GoogleFonts.inter(
+                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 24),
@@ -109,18 +140,23 @@ class ReputationCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Gold I: Only 150 points away!',
+                      'Progress to Gold I',
                       style: GoogleFonts.inter(
-                        color: Colors.white,
+                        color: isDark
+                            ? Colors.white
+                            : AppColors.lightTextSecondary,
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
-                      '85%',
+                      '1,250 / 1,500',
                       style: GoogleFonts.inter(
-                        color: Colors.white.withOpacity(0.9),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.9)
+                            : AppColors.lightTextPrimary,
                         fontSize: 14,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -132,69 +168,113 @@ class ReputationCard extends StatelessWidget {
                 Stack(
                   children: [
                     Container(
-                      height: 8,
+                      height: 10,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.2), // Dark track
-                        borderRadius: BorderRadius.circular(4),
+                        color: isDark
+                            ? Colors.black.withOpacity(0.2)
+                            : AppColors.neutral200,
+                        borderRadius: BorderRadius.circular(5),
                       ),
                     ),
                     Container(
-                      height: 8,
+                      height: 10,
                       width: MediaQuery.of(context).size.width *
                           0.6, // 85% width approx
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.5),
-                            blurRadius: 6,
-                          ),
-                        ],
+                        color: isDark ? Colors.white : AppColors.primary,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: isDark
+                            ? [
+                                BoxShadow(
+                                    color: Colors.white.withOpacity(0.5),
+                                    blurRadius: 6)
+                              ]
+                            : null,
                       ),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 12),
+
+                Text(
+                  '250 pts to reach your next milestone',
+                  style: GoogleFonts.inter(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.6)
+                        : AppColors.lightTextSecondary,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
 
                 const SizedBox(height: 24),
 
-                // Footer
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'SEASON PROGRESS',
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
+                // Footer / Button (Button only in Light Mode per screenshot, or Footer in Dark)
+                if (isDark)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'SEASON PROGRESS',
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withOpacity(0.6),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppColors.accentGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '+12% this week',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+                else
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'View Ranking Details',
+                            style: GoogleFonts.inter(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward,
+                              color: AppColors.primary, size: 16),
+                        ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppColors.accentGreen,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '+12% this week',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
               ],
             ),
           ),
