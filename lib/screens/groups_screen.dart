@@ -76,7 +76,7 @@ class _GroupsScreenState extends State<GroupsScreen>
     setState(() => _isCreating = true);
 
     try {
-      final groupId = await _groupService.createGroup(
+      await _groupService.createGroup(
         name: _nameController.text.trim(),
         description: _descController.text.trim(),
         category: _selectedCategory!,

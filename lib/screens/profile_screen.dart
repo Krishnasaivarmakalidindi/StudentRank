@@ -16,7 +16,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   final ActivityService _activityService = ActivityService();
   late TabController _tabController;
 
@@ -42,9 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
 
     final theme = Theme.of(context);
-    
+
     // Calculate progress to next level (Mock logic: 1000 pts per level)
-    final pointsForNextLevel = (user.level + 1) * 1000;
     final pointsInCurrentLevel = user.reputationScore % 1000;
     final progress = pointsInCurrentLevel / 1000.0;
     final remainingPoints = 1000 - pointsInCurrentLevel;
@@ -77,78 +77,98 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       width: double.infinity,
                       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
                       decoration: BoxDecoration(
-                         color: theme.colorScheme.surface,
-                         border: Border(bottom: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.1))),
+                        color: theme.colorScheme.surface,
+                        border: Border(
+                            bottom: BorderSide(
+                                color: theme.colorScheme.outline
+                                    .withValues(alpha: 0.1))),
                       ),
                       child: Column(
                         children: [
-                           Stack(
-                             children: [
-                               CircleAvatar(
-                                 radius: 56,
-                                 backgroundColor: theme.colorScheme.primaryContainer,
-                                 backgroundImage: user.profileImageUrl != null ? NetworkImage(user.profileImageUrl!) : null,
-                                 child: user.profileImageUrl == null
-                                     ? Text(user.name.substring(0, 1).toUpperCase(), 
-                                            style: context.textStyles.displayMedium?.bold.copyWith(color: theme.colorScheme.onPrimaryContainer))
-                                     : null,
-                               ),
-                               Positioned(
-                                 bottom: 0,
-                                 right: 0,
-                                 child: Container(
-                                   padding: const EdgeInsets.all(8),
-                                   decoration: BoxDecoration(
-                                     color: theme.colorScheme.primary,
-                                     shape: BoxShape.circle,
-                                     border: Border.all(color: theme.colorScheme.surface, width: 2),
-                                   ),
-                                   child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
-                                 ),
-                               ),
-                             ],
-                           ),
-                           const SizedBox(height: 16),
-                           
-                           // Name & Verification
-                           Row(
-                             mainAxisAlignment: MainAxisAlignment.center,
-                             children: [
-                               Text(user.name, style: context.textStyles.headlineSmall?.bold),
-                               if (user.isVerified) ...[
-                                 const SizedBox(width: 8),
-                                 const VerifiedBadge(size: 20),
-                               ],
-                             ],
-                           ),
-                           
-                           // College & Joined Date
-                           const SizedBox(height: 4),
-                           Text(
-                             user.collegeName ?? 'No College Set',
-                             style: context.textStyles.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                           ),
-                           const SizedBox(height: 4),
-                           Text(
-                             'Joined ${DateFormat.yMMMd().format(user.createdAt)}',
-                             style: context.textStyles.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
-                           ),
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 56,
+                                backgroundColor:
+                                    theme.colorScheme.primaryContainer,
+                                backgroundImage: user.profileImageUrl != null
+                                    ? NetworkImage(user.profileImageUrl!)
+                                    : null,
+                                child: user.profileImageUrl == null
+                                    ? Text(
+                                        user.name.substring(0, 1).toUpperCase(),
+                                        style: context
+                                            .textStyles.displayMedium?.bold
+                                            .copyWith(
+                                                color: theme.colorScheme
+                                                    .onPrimaryContainer))
+                                    : null,
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: theme.colorScheme.surface,
+                                        width: 2),
+                                  ),
+                                  child: const Icon(Icons.camera_alt,
+                                      size: 16, color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
 
-                           // Bio
-                           if (user.bio != null && user.bio!.isNotEmpty) ...[
-                             const SizedBox(height: 12),
-                             Text(
-                               user.bio!,
-                               style: context.textStyles.bodyMedium?.copyWith(color: theme.colorScheme.onSurface),
-                               textAlign: TextAlign.center,
-                               maxLines: 3,
-                               overflow: TextOverflow.ellipsis,
-                             ),
-                           ],
+                          // Name & Verification
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(user.name,
+                                  style:
+                                      context.textStyles.headlineSmall?.bold),
+                              if (user.isVerified) ...[
+                                const SizedBox(width: 8),
+                                const VerifiedBadge(size: 20),
+                              ],
+                            ],
+                          ),
+
+                          // College & Joined Date
+                          const SizedBox(height: 4),
+                          Text(
+                            user.collegeName ?? 'No College Set',
+                            style: context.textStyles.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Joined ${DateFormat.yMMMd().format(user.createdAt)}',
+                            style: context.textStyles.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.7)),
+                          ),
+
+                          // Bio
+                          if (user.bio != null && user.bio!.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              user.bio!,
+                              style: context.textStyles.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ],
                       ),
                     ),
-                    
+
                     // --- STATS ---
                     Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -158,48 +178,60 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                           // Reputation
                           Column(
                             children: [
-                               Text(
-                                 '${user.reputationScore}',
-                                 style: context.textStyles.displaySmall?.copyWith(
-                                   color: theme.colorScheme.primary,
-                                   fontWeight: FontWeight.w800,
-                                   fontSize: 40,
-                                 ),
-                               ),
-                               Text('Reputation', style: context.textStyles.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                              Text(
+                                '${user.reputationScore}',
+                                style:
+                                    context.textStyles.displaySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 40,
+                                ),
+                              ),
+                              Text('Reputation',
+                                  style: context.textStyles.labelMedium
+                                      ?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant)),
                             ],
                           ),
-                          
-                          Container(width: 1, height: 50, color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-                          
+
+                          Container(
+                              width: 1,
+                              height: 50,
+                              color: theme.colorScheme.outline
+                                  .withValues(alpha: 0.2)),
+
                           // Level Progress
                           Column(
                             children: [
-                               Stack(
-                                 alignment: Alignment.center,
-                                 children: [
-                                   SizedBox(
-                                     height: 60,
-                                     width: 60,
-                                     child: CircularProgressIndicator(
-                                       value: progress,
-                                       strokeWidth: 6,
-                                       backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                                       color: theme.colorScheme.secondary,
-                                       strokeCap: StrokeCap.round,
-                                     ),
-                                   ),
-                                   Text(
-                                     'Lvl ${user.level}',
-                                     style: context.textStyles.titleMedium?.bold,
-                                   ),
-                                 ],
-                               ),
-                               const SizedBox(height: 8),
-                               Text(
-                                 '$remainingPoints pts to next',
-                                 style: context.textStyles.labelSmall?.copyWith(color: theme.colorScheme.onSurfaceVariant, fontSize: 10),
-                               ),
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 60,
+                                    width: 60,
+                                    child: CircularProgressIndicator(
+                                      value: progress,
+                                      strokeWidth: 6,
+                                      backgroundColor: theme
+                                          .colorScheme.surfaceContainerHighest,
+                                      color: theme.colorScheme.secondary,
+                                      strokeCap: StrokeCap.round,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Lvl ${user.level}',
+                                    style: context.textStyles.titleMedium?.bold,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '$remainingPoints pts to next',
+                                style: context.textStyles.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 10),
+                              ),
                             ],
                           ),
                         ],
@@ -208,7 +240,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   ],
                 ),
               ),
-              
               SliverPersistentHeader(
                 delegate: _SliverAppBarDelegate(
                   TabBar(
@@ -252,18 +283,20 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyActivityState(context);
         }
-        
+
         return ListView.separated(
           padding: AppSpacing.paddingLg,
           itemCount: snapshot.data!.length,
           separatorBuilder: (_, index) => Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              margin: const EdgeInsets.only(left: 20), 
-              height: 20, 
-              width: 2, 
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2)
-            ),
+                margin: const EdgeInsets.only(left: 20),
+                height: 20,
+                width: 2,
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2)),
           ),
           itemBuilder: (context, index) {
             final activity = snapshot.data![index];
@@ -273,11 +306,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       },
     );
   }
-  
+
   Widget _buildTimelineItem(BuildContext context, Activity activity) {
     IconData icon;
     Color color;
-    
+
     switch (activity.type) {
       case ActivityType.upload:
         icon = Icons.upload_file;
@@ -328,7 +361,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               const SizedBox(height: 4),
               Text(
                 _timeAgo(activity.createdAt),
-                style: context.textStyles.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: context.textStyles.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -342,7 +376,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             ),
             child: Text(
               '+${activity.reputationChange}',
-              style: context.textStyles.labelSmall?.bold.copyWith(color: Theme.of(context).colorScheme.onPrimaryContainer),
+              style: context.textStyles.labelSmall?.bold.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer),
             ),
           ),
       ],
@@ -368,10 +403,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withValues(alpha: 0.3),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.auto_graph, size: 64, color: Theme.of(context).colorScheme.primary),
+            child: Icon(Icons.auto_graph,
+                size: 64, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(height: 24),
           Text(
@@ -382,11 +421,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           const SizedBox(height: 8),
           Text(
             'Your contributions help other students and earn you reputation.',
-            style: context.textStyles.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: context.textStyles.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          
           _buildActionButton(
             context,
             'Upload Your First Note',
@@ -415,36 +454,31 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       ),
     );
   }
-  
-  Widget _buildActionButton(
-    BuildContext context, 
-    String label, 
-    IconData icon, 
-    Color color, 
-    VoidCallback onTap, 
-    {bool isPrimary = false}
-  ) {
+
+  Widget _buildActionButton(BuildContext context, String label, IconData icon,
+      Color color, VoidCallback onTap,
+      {bool isPrimary = false}) {
     return SizedBox(
       width: double.infinity,
-      child: isPrimary 
-        ? ElevatedButton.icon(
-            onPressed: onTap,
-            icon: Icon(icon),
-            label: Text(label),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+      child: isPrimary
+          ? ElevatedButton.icon(
+              onPressed: onTap,
+              icon: Icon(icon),
+              label: Text(label),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            )
+          : OutlinedButton.icon(
+              onPressed: onTap,
+              icon: Icon(icon, color: color),
+              label: Text(label),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
-          )
-        : OutlinedButton.icon(
-            onPressed: onTap,
-            icon: Icon(icon, color: color),
-            label: Text(label),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
     );
   }
 
@@ -454,9 +488,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.military_tech_outlined, size: 64, color: Theme.of(context).colorScheme.outline),
+            Icon(Icons.military_tech_outlined,
+                size: 64, color: Theme.of(context).colorScheme.outline),
             const SizedBox(height: 16),
-            Text('No badges yet', style: context.textStyles.titleMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text('No badges yet',
+                style: context.textStyles.titleMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ],
         ),
       );
@@ -481,16 +518,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 color: Theme.of(context).colorScheme.secondaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.emoji_events, size: 32, color: Theme.of(context).colorScheme.onSecondaryContainer),
+              child: Icon(Icons.emoji_events,
+                  size: 32,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer),
             ),
             const SizedBox(height: 8),
-            Text(
-              badge.name, 
-              style: context.textStyles.labelSmall?.semiBold, 
-              textAlign: TextAlign.center, 
-              maxLines: 2, 
-              overflow: TextOverflow.ellipsis
-            ),
+            Text(badge.name,
+                style: context.textStyles.labelSmall?.semiBold,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
           ],
         );
       },
@@ -500,7 +537,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget _buildSubjectsTab(List<String> subjects) {
     if (subjects.isEmpty) {
       return Center(
-         child: Text('No subjects added', style: context.textStyles.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        child: Text('No subjects added',
+            style: context.textStyles.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
       );
     }
 
@@ -512,9 +551,14 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         return ListTile(
           leading: const Icon(Icons.book_outlined),
           title: Text(subject),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          tileColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          tileColor: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withValues(alpha: 0.3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         );
       },
     );
@@ -532,7 +576,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => _tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: _tabBar,

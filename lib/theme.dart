@@ -231,7 +231,7 @@ class AppTheme {
       colorScheme: ColorScheme.dark(
         primary: AppColors.primary,
         onPrimary: Colors.white,
-        primaryContainer: AppColors.primary.withOpacity(0.2),
+        primaryContainer: AppColors.primary.withValues(alpha: 0.2),
         onPrimaryContainer: AppColors.primaryLight,
         secondary: AppColors.secondary,
         onSecondary: Colors.white,

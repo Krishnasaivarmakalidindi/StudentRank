@@ -38,7 +38,8 @@ class _MainScreenState extends State<MainScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),

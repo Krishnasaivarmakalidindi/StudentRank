@@ -20,8 +20,9 @@ class ActivityCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardSurface : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border:
-            isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
+        border: isDark
+            ? Border.all(color: Colors.white.withValues(alpha: 0.05))
+            : null,
         boxShadow: isDark
             ? null
             : [
@@ -38,8 +39,8 @@ class ActivityCard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: isDark
-                  ? accentColor.withOpacity(0.2)
-                  : accentColor.withOpacity(0.1),
+                  ? accentColor.withValues(alpha: 0.2)
+                  : accentColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(iconData, size: 20, color: accentColor),

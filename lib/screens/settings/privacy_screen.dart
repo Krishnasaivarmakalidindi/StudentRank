@@ -62,7 +62,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('Failed to update setting: $e')),
+          SnackBar(content: Text('Failed to update setting: $e')),
         );
       }
     }
@@ -102,14 +102,14 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
             'private',
             currentMode,
           ),
-          
           const SizedBox(height: 32),
           _buildSectionHeader(context, 'Content Privacy'),
           SwitchListTile(
             title: const Text('Show Contributions'),
             subtitle: Text(
               'Allow others to see your notes and resources',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             value: _settings['contributionsVisible'] ?? true,
             onChanged: (value) => _updateSetting('contributionsVisible', value),
@@ -126,18 +126,23 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.semiBold.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-        ),
+              color: Theme.of(context).colorScheme.primary,
+            ),
       ),
     );
   }
 
-  Widget _buildRadioTile(String title, String subtitle, String value, String groupValue) {
+  Widget _buildRadioTile(
+      String title, String subtitle, String value, String groupValue) {
     return RadioListTile<String>(
       title: Text(title),
-      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+      subtitle: Text(subtitle,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant)),
       value: value,
+      // ignore: deprecated_member_use
       groupValue: groupValue,
+      // ignore: deprecated_member_use
       onChanged: (v) {
         if (v != null) _updateProfileVisibility(v);
       },

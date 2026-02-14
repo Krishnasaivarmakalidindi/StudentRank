@@ -87,6 +87,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (pickedFile == null) return;
 
+      if (!mounted) return;
+
       setState(() => _isLoading = true);
 
       final user = context.read<AppProvider>().currentUser!;
@@ -94,6 +96,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final path = 'users/${user.id}/profile.jpg';
 
       final url = await _storageService.uploadFile(file, path);
+
+      if (!mounted) return;
 
       if (url != null) {
         final updatedUser = user.copyWith(profileImageUrl: url);

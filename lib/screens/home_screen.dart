@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               : AppColors.lightTextSecondary,
                       iconBgColor:
                           Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.primary.withOpacity(0.2)
+                              ? AppColors.primary.withValues(alpha: 0.2)
                               : Colors.blue.shade50,
                       iconColor: AppColors.primary,
                       onTap: () => context.go('/contribute'),
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               : AppColors.lightTextSecondary,
                       iconBgColor:
                           Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.accentPurple.withOpacity(0.2)
+                              ? AppColors.accentPurple.withValues(alpha: 0.2)
                               : Colors.orange.shade50,
                       iconColor: Theme.of(context).brightness == Brightness.dark
                           ? AppColors.accentPurple
@@ -183,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               : AppColors.lightTextSecondary,
                       iconBgColor:
                           Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.accentOrange.withOpacity(0.2)
+                              ? AppColors.accentOrange.withValues(alpha: 0.2)
                               : Colors.green.shade50,
                       iconColor: Theme.of(context).brightness == Brightness.dark
                           ? AppColors.accentOrange
@@ -208,11 +208,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       subLabelColor:
                           Theme.of(context).brightness == Brightness.dark
                               ? AppColors.textSecondary
-                              : Colors.white.withOpacity(0.9),
+                              : Colors.white.withValues(alpha: 0.9),
                       iconBgColor:
                           Theme.of(context).brightness == Brightness.dark
-                              ? AppColors.accentGreen.withOpacity(0.2)
-                              : Colors.white.withOpacity(0.2),
+                              ? AppColors.accentGreen.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.2),
                       iconColor: Theme.of(context).brightness == Brightness.dark
                           ? AppColors.accentGreen
                           : Colors.white,
@@ -384,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 : (isDark ? AppColors.cardSurface : Colors.white),
             borderRadius: BorderRadius.circular(24),
             border: isDark
-                ? Border.all(color: Colors.white.withOpacity(0.05), width: 1)
+                ? Border.all(
+                    color: Colors.white.withValues(alpha: 0.05), width: 1)
                 : null,
             boxShadow: isDark || isPrimaryCard
                 ? null
@@ -445,12 +446,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.history, size: 48, color: Colors.white.withOpacity(0.2)),
+            Icon(Icons.history,
+                size: 48, color: Colors.white.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
             Text(
               'No recent activity',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 14,
               ),
             ),

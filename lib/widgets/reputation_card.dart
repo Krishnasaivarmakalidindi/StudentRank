@@ -40,7 +40,7 @@ class ReputationCard extends StatelessWidget {
         boxShadow: [
           isDark
               ? BoxShadow(
-                  color: AppColors.primary.withOpacity(0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 )
@@ -68,7 +68,7 @@ class ReputationCard extends StatelessWidget {
                       'Current Reputation',
                       style: GoogleFonts.inter(
                         color: isDark
-                            ? Colors.white.withOpacity(0.7)
+                            ? Colors.white.withValues(alpha: 0.7)
                             : AppColors.lightTextSecondary,
                         fontSize: 14,
                         fontWeight: isDark ? FontWeight.bold : FontWeight.w600,
@@ -81,7 +81,7 @@ class ReputationCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isDark
                             ? Colors.white
-                            : AppColors.primary.withOpacity(0.1),
+                            : AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -153,7 +153,7 @@ class ReputationCard extends StatelessWidget {
                       '1,250 / 1,500',
                       style: GoogleFonts.inter(
                         color: isDark
-                            ? Colors.white.withOpacity(0.9)
+                            ? Colors.white.withValues(alpha: 0.9)
                             : AppColors.lightTextPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -172,7 +172,7 @@ class ReputationCard extends StatelessWidget {
                       width: double.infinity,
                       decoration: BoxDecoration(
                         color: isDark
-                            ? Colors.black.withOpacity(0.2)
+                            ? Colors.black.withValues(alpha: 0.2)
                             : AppColors.neutral200,
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -187,7 +187,7 @@ class ReputationCard extends StatelessWidget {
                         boxShadow: isDark
                             ? [
                                 BoxShadow(
-                                    color: Colors.white.withOpacity(0.5),
+                                    color: Colors.white.withValues(alpha: 0.5),
                                     blurRadius: 6)
                               ]
                             : null,
@@ -202,7 +202,7 @@ class ReputationCard extends StatelessWidget {
                   '250 pts to reach your next milestone',
                   style: GoogleFonts.inter(
                     color: isDark
-                        ? Colors.white.withOpacity(0.6)
+                        ? Colors.white.withValues(alpha: 0.6)
                         : AppColors.lightTextSecondary,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
@@ -219,7 +219,7 @@ class ReputationCard extends StatelessWidget {
                       Text(
                         'SEASON PROGRESS',
                         style: GoogleFonts.inter(
-                          color: Colors.white.withOpacity(0.6),
+                          color: Colors.white.withValues(alpha: 0.6),
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.0,
@@ -253,7 +253,7 @@ class ReputationCard extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(

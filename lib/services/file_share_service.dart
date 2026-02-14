@@ -37,13 +37,15 @@ class FileShareService {
     final ext = path.extension(fileName).toLowerCase();
     if (['.jpg', '.jpeg', '.png', '.gif'].contains(ext)) {
       fileType = 'image';
-    } else if (['.pdf'].contains(ext))
+    } else if (['.pdf'].contains(ext)) {
       fileType = 'pdf';
-    else if (['.doc', '.docx'].contains(ext))
+    } else if (['.doc', '.docx'].contains(ext)) {
       fileType = 'doc';
-    else if (['.xls', '.xlsx'].contains(ext))
+    } else if (['.xls', '.xlsx'].contains(ext)) {
       fileType = 'xls';
-    else if (['.txt'].contains(ext)) fileType = 'text';
+    } else if (['.txt'].contains(ext)) {
+      fileType = 'text';
+    }
 
     // Create FileModel
     final docRef =

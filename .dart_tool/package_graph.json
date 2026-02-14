@@ -23,6 +23,7 @@
         "intl",
         "mime",
         "package_info_plus",
+        "path",
         "permission_handler",
         "provider",
         "shared_preferences",
@@ -72,6 +73,11 @@
         "test_api",
         "vector_math"
       ]
+    },
+    {
+      "name": "path",
+      "version": "1.9.1",
+      "dependencies": []
     },
     {
       "name": "cloud_firestore",
@@ -316,11 +322,6 @@
         "source_span",
         "string_scanner"
       ]
-    },
-    {
-      "name": "path",
-      "version": "1.9.1",
-      "dependencies": []
     },
     {
       "name": "json_annotation",

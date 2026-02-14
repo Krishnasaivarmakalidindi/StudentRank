@@ -25,7 +25,6 @@ class StudentRankAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return AppBar(
       centerTitle: false,

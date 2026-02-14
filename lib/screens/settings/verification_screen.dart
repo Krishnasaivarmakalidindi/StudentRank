@@ -29,9 +29,11 @@ class VerificationStatusScreen extends StatelessWidget {
             context,
             'Email Verification',
             'Verify your email address to secure your account.',
-            isCompleted: user.email != null && !user.isGuest && !user.isDemo, // Basic check
-            action: user.email != null && !user.isGuest && !user.isDemo 
-                ? null 
+            isCompleted: user.email != null &&
+                !user.isGuest &&
+                !user.isDemo, // Basic check
+            action: user.email != null && !user.isGuest && !user.isDemo
+                ? null
                 : TextButton(onPressed: () {}, child: const Text('Verify')),
           ),
           const SizedBox(height: 12),
@@ -41,36 +43,47 @@ class VerificationStatusScreen extends StatelessWidget {
             'Upload your student ID or use a .edu email to verify your student status.',
             isCompleted: user.isVerified,
             action: user.isVerified
-                ? null 
+                ? null
                 : TextButton(onPressed: () {}, child: const Text('Verify')),
           ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+              border: Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.stars, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.stars,
+                        color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Benefits of Verification',
-                      style: Theme.of(context).textTheme.titleSmall?.bold.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.titleSmall?.bold.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                _buildBenefit(context, 'Official Verified Badge on your profile'),
+                _buildBenefit(
+                    context, 'Official Verified Badge on your profile'),
                 _buildBenefit(context, 'Access to college-exclusive groups'),
-                _buildBenefit(context, 'Higher visibility for your contributions'),
+                _buildBenefit(
+                    context, 'Higher visibility for your contributions'),
                 _buildBenefit(context, 'Participate in inter-college rankings'),
               ],
             ),
@@ -107,7 +120,7 @@ class VerificationStatusScreen extends StatelessWidget {
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -135,15 +148,16 @@ class VerificationStatusScreen extends StatelessWidget {
             Text(
               user.email!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildStep(BuildContext context, String title, String description, {required bool isCompleted, Widget? action}) {
+  Widget _buildStep(BuildContext context, String title, String description,
+      {required bool isCompleted, Widget? action}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -157,15 +171,17 @@ class VerificationStatusScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isCompleted 
-                  ? Colors.green.withOpacity(0.1) 
+              color: isCompleted
+                  ? Colors.green.withValues(alpha: 0.1)
                   : Theme.of(context).colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Icon(
               isCompleted ? Icons.check : Icons.circle_outlined,
               size: 20,
-              color: isCompleted ? Colors.green : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: isCompleted
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 16),
@@ -173,13 +189,14 @@ class VerificationStatusScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleSmall?.semiBold),
+                Text(title,
+                    style: Theme.of(context).textTheme.titleSmall?.semiBold),
                 const SizedBox(height: 4),
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
                 if (action != null) ...[
                   const SizedBox(height: 8),
@@ -199,14 +216,15 @@ class VerificationStatusScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outline, size: 16, color: Theme.of(context).colorScheme.primary),
+          Icon(Icons.check_circle_outline,
+              size: 16, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
             ),
           ),
         ],

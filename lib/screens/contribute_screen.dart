@@ -424,7 +424,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(
-                                color: colors.outline.withOpacity(0.5)),
+                                color: colors.outline.withValues(alpha: 0.5)),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -438,7 +438,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
                                     leading: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: item.color.withOpacity(0.1),
+                                        color:
+                                            item.color.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(item.icon, color: item.color),
@@ -460,7 +461,8 @@ class _ContributeScreenState extends State<ContributeScreen> {
                                   if (index < _uploadedItems.length - 1)
                                     Divider(
                                         height: 1,
-                                        color: colors.outline.withOpacity(0.2)),
+                                        color: colors.outline
+                                            .withValues(alpha: 0.2)),
                                 ],
                               );
                             }).toList(),
@@ -481,7 +483,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
                 color: colors.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: colors.shadow.withOpacity(0.05),
+                    color: colors.shadow.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -537,7 +539,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.outline.withOpacity(0.5)),
+        border: Border.all(color: colors.outline.withValues(alpha: 0.5)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -574,7 +576,7 @@ class _ContributeScreenState extends State<ContributeScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: colors.shadow.withOpacity(0.1),
+                    color: colors.shadow.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
@@ -606,11 +608,16 @@ class _ContributeScreenState extends State<ContributeScreen> {
               color: Theme.of(context).colorScheme.surface,
               shape: BoxShape.circle,
               border: Border.all(
-                  color:
-                      Theme.of(context).colorScheme.outline.withOpacity(0.5)),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.5)),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .shadow
+                      .withValues(alpha: 0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 )
