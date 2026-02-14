@@ -59,6 +59,7 @@ class _MainScreenState extends State<MainScreen> {
         elevation: 0,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
+        padding: EdgeInsets.zero, // Remove default padding to prevent overflow
         color: Theme.of(context)
             .scaffoldBackgroundColor, // Blend with background or slightly lighter
         child: Row(
