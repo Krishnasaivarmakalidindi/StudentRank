@@ -94,31 +94,13 @@ class AppProvider extends ChangeNotifier {
         // Data Recovery / Zombie State
         // Logic: If we are here, Firebase Auth says we are logged in.
         // But Firestore has no doc. This happens if creation failed or doc was deleted.
-        // We should attempt to create a basic doc to "recover".
+        // We DO NOT attempt to recover automatically as it might overwrite data.
         debugPrint(
-            "⚠️ Zombie State Detected: Auth exists but no Firestore doc. Attempting recovery.");
-
-        // Try to reconstruct basic info from Auth
-        final authUser = _authService.currentUser;
-        if (authUser != null) {
-          final recoveredUser = User(
-            id: authUser.uid,
-            name: authUser.displayName ?? "Recovered User",
-            email: authUser.email ?? "",
-            joinedDate: DateTime.now(),
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            isVerified: authUser.emailVerified,
-            profileCompleted: false,
-            reputationScore: 0,
-            level: 1,
-            collegeRank: 0,
-            subjects: [],
-            badges: [],
-          );
-          await _userService.createUser(recoveredUser);
-          user = recoveredUser;
-        }
+            "⚠️ Zombie State Detected: Auth exists but no Firestore doc. Logging out to prevent inconsistent state.");
+        _currentUser = null;
+        // Optionally sign out from Auth to force clean state
+        // await _authService.signOut();
+        // We won't force sign out here to avoid side effects in this getter, but user is null.
       }
 
       _currentUser = user;

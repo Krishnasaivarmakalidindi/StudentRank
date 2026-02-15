@@ -8,7 +8,7 @@ import 'package:studentrank/theme.dart';
 import 'package:studentrank/widgets/reputation_card.dart';
 import 'package:studentrank/widgets/activity_card.dart';
 
-// import 'package:studentrank/models/activity.dart'; // duplicate removed
+import 'package:studentrank/models/activity.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +19,21 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ActivityService _activityService = ActivityService();
+  late Future<List<Activity>> _feedFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _feedFuture = _activityService.getFeedActivities(limit: 5);
+  }
+
+  Future<void> _refreshFeed() async {
+    setState(() {
+      _feedFuture = _activityService.getFeedActivities(limit: 5);
+    });
+    // Wait for the future to complete to satisfy RefreshIndicator
+    await _feedFuture;
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -47,7 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await appProvider.refreshUser();
+            await Future.wait([
+              appProvider.refreshUser(),
+              _refreshFeed(),
+            ]);
           },
           color: AppColors.primary,
           backgroundColor: AppColors.cardSurface,
@@ -259,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 FutureBuilder(
-                  future: _activityService.getFeedActivities(limit: 5),
+                  future: _feedFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(

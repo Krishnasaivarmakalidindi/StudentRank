@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => FileShareProvider()),
+        Provider(create: (_) => GroupService()),
       ],
       child: const MyAppContent(),
     );

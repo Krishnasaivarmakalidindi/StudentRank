@@ -20,11 +20,25 @@ class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   final ActivityService _activityService = ActivityService();
   late TabController _tabController;
+  Future<List<Activity>>? _activitiesFuture;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = context.read<AppProvider>().currentUser;
+    if (user != null &&
+        (_activitiesFuture == null || _currentUserId != user.id)) {
+      _currentUserId = user.id;
+      _activitiesFuture =
+          _activityService.getRecentActivities(user.id, limit: 30);
+    }
   }
 
   @override
@@ -273,8 +287,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildActivityTab(String userId) {
+    // Ensure future is set if not already (safeguard)
+    _activitiesFuture ??=
+        _activityService.getRecentActivities(userId, limit: 30);
+
     return FutureBuilder<List<Activity>>(
-      future: _activityService.getRecentActivities(userId, limit: 30),
+      future: _activitiesFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

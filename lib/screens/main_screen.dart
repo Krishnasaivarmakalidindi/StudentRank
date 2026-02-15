@@ -55,37 +55,41 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        height: 80,
+        height: 80, // Restore fixed height to ensure enough space
         elevation: 0,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
         padding: EdgeInsets.zero, // Remove default padding to prevent overflow
         color: Theme.of(context)
             .scaffoldBackgroundColor, // Blend with background or slightly lighter
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, Icons.home_rounded, 'Home'),
-            _buildNavItem(1, Icons.explore_rounded, 'Explore'),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                const SizedBox(height: 48), // Clear the FAB
-                Text(
-                  'Contribute',
-                  style: GoogleFonts.inter(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.home_rounded, 'Home'),
+              _buildNavItem(1, Icons.explore_rounded, 'Explore'),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const SizedBox(
+                      height: 38), // Reduced to clear FAB but save space
+                  Text(
+                    'Contribute',
+                    style: GoogleFonts.inter(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-              ],
-            ),
-            _buildNavItem(3, Icons.groups_rounded, 'Groups'),
-            _buildNavItem(4, Icons.person_rounded, 'Profile'),
-          ],
+                  const SizedBox(height: 4),
+                ],
+              ),
+              _buildNavItem(3, Icons.groups_rounded, 'Groups'),
+              _buildNavItem(4, Icons.person_rounded, 'Profile'),
+            ],
+          ),
         ),
       ),
     );
@@ -101,12 +105,13 @@ class _MainScreenState extends State<MainScreen> {
       onTap: () => setState(() => _currentIndex = index),
       customBorder: const CircleBorder(),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 8.0, vertical: 4.0), // Reduced vertical padding
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 26),
-            const SizedBox(height: 4),
+            Icon(icon, color: color, size: 24), // Reduced icon size
+            const SizedBox(height: 2), // Reduced gap
             Text(
               label,
               style: TextStyle(
