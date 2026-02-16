@@ -1,12 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' hide Badge;
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId:
-        '919109658740-8mundtc8a6h1t86j5r1ag64cfmbmk4it.apps.googleusercontent.com',
+    clientId: kIsWeb
+        ? '919109658740-8mundtc8a6h1t86j5r1ag64cfmbmk4it.apps.googleusercontent.com'
+        : null,
   );
 
   // Stream of auth state changes

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-// import 'package:studentrank/nav.dart'; // Removed
+
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/validation_service.dart';
-// import 'package:studentrank/theme.dart'; // Removed unused import
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -179,12 +178,23 @@ class _AuthScreenState extends State<AuthScreen>
     setState(() => _localLoading = true);
     try {
       await context.read<AppProvider>().signInWithGoogle();
-      // AuthGate handles navigation
-      // if (mounted) context.go(AppRoutes.main);
+
+      // Check if login was cancelled (user remains null)
+      if (mounted) {
+        final provider = context.read<AppProvider>();
+        if (provider.currentUser == null) {
+          setState(() => _localLoading = false);
+        }
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _localLoading = false);
-        _handleAuthError(e);
+        // Only show error if it's NOT a cancellation
+        if (!e.toString().contains('popup_closed') &&
+            !e.toString().contains('canceled') &&
+            !e.toString().contains('cancelled')) {
+          _handleAuthError(e);
+        }
       }
     }
   }

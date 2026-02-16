@@ -91,22 +91,22 @@ class AppProvider extends ChangeNotifier {
       User? user = await _userService.getUserById(uid);
 
       if (user == null) {
-        // Data Recovery / Zombie State
-        // Logic: If we are here, Firebase Auth says we are logged in.
-        // But Firestore has no doc. This happens if creation failed or doc was deleted.
-        // We DO NOT attempt to recover automatically as it might overwrite data.
-        debugPrint(
-            "⚠️ Zombie State Detected: Auth exists but no Firestore doc. Logging out to prevent inconsistent state.");
+        // Zombie State Detected: Auth exists but Firestore doc missing.
+        // This implies the user account is in an inconsistent state or data was deleted.
+        // We MUST sign out to prevent the app from being stuck or overwriting data.
+        debugPrint("⚠️ Zombie State Detected: Logging out to clean state.");
+        await _authService.signOut();
         _currentUser = null;
-        // Optionally sign out from Auth to force clean state
-        // await _authService.signOut();
-        // We won't force sign out here to avoid side effects in this getter, but user is null.
+      } else {
+        _currentUser = user;
       }
-
-      _currentUser = user;
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
+      // CRITICAL: On network error or other fetch errors, we do NOT sign out.
+      // We keep _currentUser as null (or previous?), but we don't force logout.
+      // Ideally, show error UI. For now, we ensure we don't overwrite.
       _currentUser = null;
+      // Optionally rethrow if we want UI to know, but this is called from listener.
     } finally {
       _isLoading = false;
       notifyListeners();

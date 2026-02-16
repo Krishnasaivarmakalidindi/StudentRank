@@ -26,7 +26,7 @@ class ChatService {
       // We use doc().set() instead of add() so we can include the ID in the document
       // which is helpful for the Message model mapping
       final messageRef = _firestore
-          .collection('groups')
+          .collection('study_groups')
           .doc(groupId)
           .collection('messages')
           .doc();
@@ -44,7 +44,7 @@ class ChatService {
       });
 
       // Update group's lastMessage and messageCount
-      await _firestore.collection('groups').doc(groupId).update({
+      await _firestore.collection('study_groups').doc(groupId).update({
         'lastMessage': messageText,
         'lastMessageTime': FieldValue.serverTimestamp(),
         'messageCount': FieldValue.increment(1),
@@ -62,7 +62,7 @@ class ChatService {
   Stream<QuerySnapshot> getMessagesStream(String groupId) {
     try {
       return _firestore
-          .collection('groups')
+          .collection('study_groups')
           .doc(groupId)
           .collection('messages')
           .orderBy('timestamp', descending: true)
@@ -78,7 +78,7 @@ class ChatService {
   Future<int> getMessageCount(String groupId) async {
     try {
       final snapshot = await _firestore
-          .collection('groups')
+          .collection('study_groups')
           .doc(groupId)
           .collection('messages')
           .count()
@@ -108,7 +108,7 @@ class ChatService {
   // Delete message
   Future<void> deleteMessage(String groupId, String messageId) async {
     await _firestore
-        .collection('groups')
+        .collection('study_groups')
         .doc(groupId)
         .collection('messages')
         .doc(messageId)

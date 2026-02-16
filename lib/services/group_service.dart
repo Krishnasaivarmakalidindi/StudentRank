@@ -24,49 +24,57 @@ class GroupService {
           'id': 'data-science-ml',
           'name': 'Data Science & Machine Learning',
           'category': 'Computer Science',
-          'description': 'Explore ML algorithms, data analysis, and AI applications. Share projects and learn together.',
+          'description':
+              'Explore ML algorithms, data analysis, and AI applications. Share projects and learn together.',
         },
         {
           'id': 'mathematics-solvers',
           'name': 'Mathematics Problem Solvers',
           'category': 'Mathematics',
-          'description': 'For math enthusiasts tackling calculus, linear algebra, differential equations, and more. Daily problem challenges.',
+          'description':
+              'For math enthusiasts tackling calculus, linear algebra, differential equations, and more. Daily problem challenges.',
         },
         {
           'id': 'circuit-design',
           'name': 'Circuit Design & Analysis Hub',
           'category': 'Electrical Engineering',
-          'description': 'For electrical engineering students focusing on circuit theory, electronics, and PCB design. Share projects and schematics.',
+          'description':
+              'For electrical engineering students focusing on circuit theory, electronics, and PCB design. Share projects and schematics.',
         },
         {
           'id': 'quantum-physics',
           'name': 'Quantum Physics Discussion',
           'category': 'Physics',
-          'description': 'Deep dive into quantum mechanics, quantum computing, and modern physics. Regular problem-solving sessions.',
+          'description':
+              'Deep dive into quantum mechanics, quantum computing, and modern physics. Regular problem-solving sessions.',
         },
         {
           'id': 'web-development',
           'name': 'Web Development Masters',
           'category': 'Computer Science',
-          'description': 'Master frontend, backend, and full-stack web development. Share code snippets, projects, and best practices.',
+          'description':
+              'Master frontend, backend, and full-stack web development. Share code snippets, projects, and best practices.',
         },
         {
           'id': 'competitive-programming',
           'name': 'Competitive Programming',
           'category': 'Computer Science',
-          'description': 'Practice coding problems, algorithms, and competitive programming. Daily challenges and solutions.',
+          'description':
+              'Practice coding problems, algorithms, and competitive programming. Daily challenges and solutions.',
         },
         {
           'id': 'android-development',
           'name': 'Android Development',
           'category': 'Computer Science',
-          'description': 'Build amazing Android apps. Share tutorials, libraries, and projects with fellow developers.',
+          'description':
+              'Build amazing Android apps. Share tutorials, libraries, and projects with fellow developers.',
         },
         {
           'id': 'ai-blockchain',
           'name': 'AI & Blockchain',
           'category': 'Emerging Tech',
-          'description': 'Explore artificial intelligence, blockchain technology, Web3, and decentralized applications.',
+          'description':
+              'Explore artificial intelligence, blockchain technology, Web3, and decentralized applications.',
         },
       ];
 
@@ -93,7 +101,7 @@ class GroupService {
             updatedAt: now.toDate(),
             isDefault: true,
           );
-          
+
           batch.set(docRef, studyGroup.toJson());
           hasUpdates = true;
         }
@@ -113,6 +121,7 @@ class GroupService {
     return _firestore
         .collection(_collection)
         .orderBy('memberCount', descending: true)
+        .limit(50)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
@@ -188,7 +197,7 @@ class GroupService {
     try {
       final now = DateTime.now();
       final newGroupRef = _firestore.collection(_collection).doc();
-      
+
       final newGroup = StudyGroup(
         id: newGroupRef.id,
         name: name,
@@ -220,7 +229,7 @@ class GroupService {
     try {
       final doc = await _firestore.collection(_collection).doc(groupId).get();
       if (!doc.exists) return false;
-      
+
       final List<dynamic> members = doc.data()?['members'] ?? [];
       return members.contains(userId);
     } catch (e) {
@@ -231,7 +240,11 @@ class GroupService {
 
   // Helper to get single group stream (needed for details screen)
   Stream<StudyGroup?> getGroupStream(String groupId) {
-    return _firestore.collection(_collection).doc(groupId).snapshots().map((doc) {
+    return _firestore
+        .collection(_collection)
+        .doc(groupId)
+        .snapshots()
+        .map((doc) {
       if (!doc.exists) return null;
       final data = doc.data()!;
       data['id'] = doc.id;

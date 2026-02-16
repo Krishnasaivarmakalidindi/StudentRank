@@ -28,7 +28,10 @@ service cloud.firestore {
       // (Reputation should be updated via Cloud Functions or secure backend calls, 
       // but if we must allow client update for MVP, we restrict it)
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      // Prevent users from granting themselves admin privileges or other sensitive flags
+      // Prevent users from changing 'isAdmin' field
+      allow update: if isOwner(userId) 
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin']);
       
       allow delete: if isOwner(userId);
     }

@@ -23,7 +23,7 @@ class UserService {
       return User.fromJson({...data, 'id': doc.id});
     } catch (e) {
       debugPrint('Error getting user by ID: $e');
-      return null;
+      rethrow;
     }
   }
 
