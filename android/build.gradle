@@ -4,8 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22'
+        classpath 'com.android.tools.build:gradle:8.7.0'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.10'
     }
 }
 
@@ -16,7 +16,7 @@ allprojects {
     }
 }
 
-rootProject.buildDir = "../build"
+rootProject.layout.buildDirectory.set(file("../build"))
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty("kotlin")) {
@@ -48,7 +48,7 @@ subprojects {
 }
 
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
 }
 
 subprojects {
@@ -56,7 +56,7 @@ subprojects {
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+    delete rootProject.layout.buildDirectory
 }
 
 def keystoreProperties = new Properties()
