@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/material.dart' hide Badge;
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studentrank/models/user.dart';
@@ -12,55 +12,48 @@ class AppProvider extends ChangeNotifier {
 
   User? _currentUser;
   bool _isLoading = true;
-  bool _isCreatingProfile =
-      false; // Guard against race conditions during sign-up/recovery
+  bool _isCreatingProfile = false;
+  bool _needsOnboarding = false;
   StreamSubscription<auth.User?>? _authSubscription;
   ThemeMode _themeMode = ThemeMode.light;
 
+  // ─── Getters ───
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
-  // We check firebase auth state via authService (or local cache)
-  // But cleaner to rely on _currentUser being populated for "Full Auth"
-  // However, for AuthGate, we need to distinguish "Not Logged In" vs "Logged In but loading profile"
   bool get isAuthenticated => _authService.currentUser != null;
+  bool get needsOnboarding => _needsOnboarding;
   ThemeMode get themeMode => _themeMode;
 
-  bool get isPasswordAuth {
-    final user = _authService.currentUser;
-    return user?.providerData.any((p) => p.providerId == 'password') ?? false;
-  }
+  bool get isPasswordAuth => _authService.isPasswordUser;
+  bool get isGoogleAuth => _authService.isGoogleUser;
+  bool get isEmailVerified => _authService.isEmailVerified;
 
   AppProvider() {
     _init();
   }
 
   void _init() async {
-    // Load theme
+    // Load saved theme
     try {
       final prefs = await SharedPreferences.getInstance();
       final themeString = prefs.getString('theme_mode');
-      if (themeString != null) {
-        if (themeString == 'light') {
-          _themeMode = ThemeMode.light;
-        } else if (themeString == 'dark') {
-          _themeMode = ThemeMode.dark;
-        } else {
-          _themeMode = ThemeMode.light; // Default to Light
-        }
+      if (themeString == 'dark') {
+        _themeMode = ThemeMode.dark;
+      } else {
+        _themeMode = ThemeMode.light;
       }
     } catch (e) {
       debugPrint('Error loading theme: $e');
     }
 
+    // Listen to auth state changes
     _authSubscription =
         _authService.authStateChanges.listen((auth.User? firebaseUser) async {
-      if (_isCreatingProfile) {
-        // Skip automatic fetching if we are in the middle of manually creating a profile
-        // The manual process will handle fetching/setting the user and notifying listeners.
-        return;
-      }
+      if (_isCreatingProfile) return;
+
       if (firebaseUser == null) {
         _currentUser = null;
+        _needsOnboarding = false;
         _isLoading = false;
         notifyListeners();
       } else {
@@ -69,20 +62,20 @@ class AppProvider extends ChangeNotifier {
     });
   }
 
+  // ─── Theme ───
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
-      String value = 'system';
-      if (mode == ThemeMode.light) value = 'light';
-      if (mode == ThemeMode.dark) value = 'dark';
+      String value = mode == ThemeMode.dark ? 'dark' : 'light';
       await prefs.setString('theme_mode', value);
     } catch (e) {
       debugPrint('Error saving theme: $e');
     }
   }
 
+  // ─── Fetch User from Firestore ───
   Future<void> _fetchCurrentUser(String uid) async {
     try {
       _isLoading = true;
@@ -91,82 +84,73 @@ class AppProvider extends ChangeNotifier {
       User? user = await _userService.getUserById(uid);
 
       if (user == null) {
-        // Zombie State Detected: Auth exists but Firestore doc missing.
-        // This implies the user account is in an inconsistent state or data was deleted.
-        // We MUST sign out to prevent the app from being stuck or overwriting data.
-        debugPrint("⚠️ Zombie State Detected: Logging out to clean state.");
-        await _authService.signOut();
+        // Auth exists but no Firestore doc
+        // Could be new Google user or orphaned state
         _currentUser = null;
+        _needsOnboarding = true;
+      } else if (!user.profileCompleted) {
+        // User exists but hasn't completed onboarding
+        _currentUser = user;
+        _needsOnboarding = true;
       } else {
         _currentUser = user;
+        _needsOnboarding = false;
+        // Update last login timestamp
+        _userService.updateLastLogin(uid);
       }
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
-      // CRITICAL: On network error or other fetch errors, we do NOT sign out.
-      // We keep _currentUser as null (or previous?), but we don't force logout.
-      // Ideally, show error UI. For now, we ensure we don't overwrite.
       _currentUser = null;
-      // Optionally rethrow if we want UI to know, but this is called from listener.
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Auth Methods
+  // ─── Email + Password Sign In ───
   Future<void> signInWithEmailAndPassword(String email, String password) async {
     try {
-      // _isLoading = true; // interactively handled by UI
-      // notifyListeners();
+      final authUser = await _authService.signInWithEmail(email, password);
 
-      // 1. Auth Service
-      await _authService.signInWithEmail(email, password);
-      // 2. Auth State listener will handle fetching user
-      // We don't wait for listener here, but listener will eventually update currentUser
-      // But we might want to wait for listener to complete?
-      // Actually, standard pattern is fire and forget or await result.
-      // Since _authService.signIn returns, the AuthState stream fires.
-      // fetchCurrentUser sets _isLoading.
-      // So checking _fetchCurrentUser logic:
-      // _authSubscription calls _fetchCurrentUser which sets _isLoading = true!
+      // Block access if email not verified
+      if (authUser != null && !authUser.emailVerified) {
+        // Don't sign them out — they need to verify
+        throw Exception(
+            'Please verify your email before signing in. Check your inbox.');
+      }
+      // Auth listener handles the rest
     } catch (e) {
       rethrow;
-    } finally {
-      // _isLoading = false;
-      // notifyListeners();
     }
   }
 
+  // ─── Email + Password Sign Up ───
   Future<void> signUpWithEmailAndPassword(
       String email, String password, String name) async {
     try {
       _isCreatingProfile = true;
 
-      // 1. Create Auth User
-      final authUser = await _authService.signUpWithEmail(email, password);
-      if (authUser == null) throw Exception("Auth creation failed");
+      // 1. Create Auth User (sends verification email automatically)
+      final authUser =
+          await _authService.signUpWithEmail(email, password, name);
+      if (authUser == null) throw Exception('Account creation failed');
 
-      // 2. Create Firestore User
+      // 2. Create initial Firestore user doc (profileCompleted = false)
       final newUser = User(
         id: authUser.uid,
         name: name,
         email: email,
-        joinedDate: DateTime.now(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
         isVerified: false,
-        profileCompleted: true,
+        profileCompleted: false,
         reputationScore: 0,
-        collegeRank: 0,
-        level: 1,
-        subjects: [],
-        badges: [],
+        createdAt: DateTime.now(),
+        lastLoginAt: DateTime.now(),
       );
 
       await _userService.createUser(newUser);
 
-      // 3. Set local state (Optional, as listener will eventually catch up, but this is faster)
       _currentUser = newUser;
+      _needsOnboarding = false; // They need to verify email first
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -175,40 +159,41 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Google Sign In ───
   Future<void> signInWithGoogle() async {
     try {
       _isCreatingProfile = true;
 
-      // 1. SignIn Google
-      final authUser = await _authService.signInWithGoogle();
-      if (authUser == null) {
-        return; // Cancelled
-      }
+      final result = await _authService.signInWithGoogle();
+      if (result.user == null) return; // Cancelled
 
-      // 2. Check/Create Firestore
-      User? user = await _userService.getUserById(authUser.uid);
-      if (user == null) {
+      // Check if Firestore doc exists
+      User? existingUser = await _userService.getUserById(result.user!.uid);
+
+      if (existingUser != null) {
+        // Existing user — go to home (or onboarding if incomplete)
+        _currentUser = existingUser;
+        _needsOnboarding = !existingUser.profileCompleted;
+        _userService.updateLastLogin(result.user!.uid);
+      } else {
+        // New user — create doc and go to onboarding
         final newUser = User(
-          id: authUser.uid,
-          name: authUser.displayName ?? "Student",
-          email: authUser.email ?? "",
-          joinedDate: DateTime.now(),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          isVerified: authUser.emailVerified,
-          profileCompleted: true,
+          id: result.user!.uid,
+          name: result.user!.displayName ?? 'Student',
+          email: result.user!.email ?? '',
+          photoUrl: result.user!.photoURL,
+          isVerified: true, // Google users are auto-verified
+          profileCompleted: false, // Needs academic onboarding
           reputationScore: 0,
-          collegeRank: 0,
-          level: 1,
-          subjects: [],
-          badges: [],
-          profileImageUrl: authUser.photoURL,
+          createdAt: DateTime.now(),
+          lastLoginAt: DateTime.now(),
         );
+
         await _userService.createUser(newUser);
         _currentUser = newUser;
-      } else {
-        _currentUser = user;
+        _needsOnboarding = true;
       }
+
       notifyListeners();
     } catch (e) {
       rethrow;
@@ -217,136 +202,89 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> signInAnonymously(String name, String educationLevel) async {
+  // ─── Complete Academic Onboarding ───
+  Future<void> completeOnboarding({
+    required String campusId,
+    required String branch,
+    required int year,
+    required int semester,
+  }) async {
+    if (_currentUser == null && _authService.currentUser != null) {
+      // Edge case: user doc might not be loaded yet
+      _currentUser =
+          await _userService.getUserById(_authService.currentUser!.uid);
+    }
+    if (_currentUser == null) throw Exception('No user found');
+
     try {
-      _isCreatingProfile = true;
-
-      // 1. Auth Guest
-      final authUser = await _authService.signInAnonymously();
-      if (authUser == null) throw Exception("Guest auth failed");
-
-      // 2. Firestore Guest
-      final newUser = User(
-        id: authUser.uid,
-        name: name,
-        educationLevel: educationLevel,
-        isGuest: true,
-        joinedDate: DateTime.now(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        profileCompleted: true,
-        reputationScore: 0,
-        collegeRank: 0,
-        level: 1,
-        subjects: [],
-        badges: [],
+      await _userService.completeOnboarding(
+        userId: _currentUser!.id,
+        campusId: campusId,
+        branch: branch,
+        year: year,
+        semester: semester,
       );
 
-      await _userService.createUser(newUser);
-      _currentUser = newUser;
+      _currentUser = _currentUser!.copyWith(
+        campusId: campusId,
+        branch: branch,
+        year: year,
+        semester: semester,
+        profileCompleted: true,
+        academicUpdatedAt: DateTime.now(),
+      );
+      _needsOnboarding = false;
       notifyListeners();
     } catch (e) {
+      debugPrint('Error completing onboarding: $e');
       rethrow;
-    } finally {
-      _isCreatingProfile = false;
     }
   }
 
-  Future<void> createDemoUser() async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      final authUser = await _authService.signInAnonymously();
-      if (authUser == null) throw Exception("Demo auth failed");
-
-      final demoUser = User(
-        id: authUser.uid,
-        name: "Demo User",
-        isDemo: true, // Specific flag for demo
-        profileCompleted: true,
-        joinedDate: DateTime.now(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        reputationScore: 1250,
-        level: 3,
-        collegeRank: 42,
-        collegeName: "Demo University",
-        educationLevel: "Undergraduate",
-        bio: "Exploring StudentRank capabilities.",
-        subjects: ["Computer Science", "Mathematics"],
-        badges: [
-          Badge(
-            id: "demo_badge_1",
-            name: "Early Adopter",
-            description: "Joined during beta",
-            iconName: "star",
-            earnedDate: DateTime.now(),
-          ),
-          Badge(
-            id: "demo_badge_2",
-            name: "First Quiz",
-            description: "Completed first quiz",
-            iconName: "quiz",
-            earnedDate: DateTime.now(),
-          )
-        ],
-      );
-
-      await _userService.createUser(demoUser);
-      _currentUser = demoUser;
-    } catch (e) {
-      rethrow;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
+  // ─── Sign Out ───
   Future<void> signOut() async {
     try {
       await _authService.signOut();
       _currentUser = null;
+      _needsOnboarding = false;
       notifyListeners();
     } catch (e) {
       debugPrint('Error signing out: $e');
     }
   }
 
+  // ─── Update User ───
   Future<void> updateUser(User user) async {
     _currentUser = user;
     await _userService.updateProfile(user);
     notifyListeners();
   }
 
+  // ─── Reputation ───
   Future<void> updateReputationScore(int change) async {
     if (_currentUser == null) return;
 
     await _userService.updateReputationScore(_currentUser!.id, change);
-    // Refresh to get new level/score
     _currentUser = await _userService.getUserById(_currentUser!.id);
     notifyListeners();
   }
 
+  // ─── Refresh ───
   Future<void> refreshUser() async {
     if (_currentUser == null) return;
     _currentUser = await _userService.getUserById(_currentUser!.id);
     notifyListeners();
   }
 
+  // ─── Email Management ───
   Future<void> changeEmail(String newEmail, String? password) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // 1. Auth update
       await _authService.reauthenticate(password: password);
       await _authService.updateEmail(newEmail);
-
-      // 2. Firestore update
       await _userService.updateEmailInFirestore(_currentUser!.id, newEmail);
-
-      // Refresh user to get new email
       await refreshUser();
     } catch (e) {
       rethrow;
@@ -356,6 +294,7 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Password Management ───
   Future<void> changePassword(
       String? currentPassword, String newPassword) async {
     try {
@@ -372,23 +311,20 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Delete Account ───
   Future<void> deleteAccount(String? password) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      // 1. Auth Recheck
       await _authService.reauthenticate(password: password);
 
       final uid = _currentUser!.id;
-
-      // 2. Delete Firestore
       await _userService.deleteUserDocument(uid);
-
-      // 3. Delete Auth
       await _authService.deleteAccount();
 
       _currentUser = null;
+      _needsOnboarding = false;
     } catch (e) {
       rethrow;
     } finally {
@@ -397,37 +333,36 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Privacy Settings ───
   Future<void> updatePrivacySettings(Map<String, bool> settings) async {
     if (_currentUser == null) return;
     try {
       final updatedUser = _currentUser!.copyWith(privacySettings: settings);
       _currentUser = updatedUser;
-      notifyListeners(); // Optimistic update
-
+      notifyListeners();
       await _userService.updatePrivacySettings(updatedUser.id, settings);
     } catch (e) {
-      // Revert on failure
       await refreshUser();
       rethrow;
     }
   }
 
+  // ─── Notification Settings ───
   Future<void> updateNotificationSettings(Map<String, bool> settings) async {
     if (_currentUser == null) return;
     try {
       final updatedUser =
           _currentUser!.copyWith(notificationSettings: settings);
       _currentUser = updatedUser;
-      notifyListeners(); // Optimistic update
-
+      notifyListeners();
       await _userService.updateNotificationSettings(updatedUser.id, settings);
     } catch (e) {
-      // Revert on failure
       await refreshUser();
       rethrow;
     }
   }
 
+  // ─── Email Verification ───
   Future<void> sendEmailVerification() async {
     await _authService.sendEmailVerification();
   }
@@ -436,7 +371,6 @@ class AppProvider extends ChangeNotifier {
     await _authService.reloadUser();
     final authUser = _authService.currentUser;
 
-    // Sync verification status if changed
     if (authUser != null && authUser.emailVerified) {
       if (_currentUser != null && !_currentUser!.isVerified) {
         final updatedUser = _currentUser!.copyWith(isVerified: true);

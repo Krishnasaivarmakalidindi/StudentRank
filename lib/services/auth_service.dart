@@ -16,13 +16,19 @@ class AuthService {
   // Get current user
   User? get currentUser => _auth.currentUser;
 
-  // Sign in with email and password
+  // ─── Email + Password Sign In ───
   Future<User?> signInWithEmail(String email, String password) async {
     try {
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Block unverified email users
+      if (credential.user != null && !credential.user!.emailVerified) {
+        return credential.user;
+      }
+
       return credential.user;
     } catch (e) {
       debugPrint('Error signing in: $e');
@@ -30,13 +36,21 @@ class AuthService {
     }
   }
 
-  // Sign up with email and password
-  Future<User?> signUpWithEmail(String email, String password) async {
+  // ─── Email + Password Sign Up ───
+  Future<User?> signUpWithEmail(
+      String email, String password, String name) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      // Set display name
+      await credential.user?.updateDisplayName(name);
+
+      // Send verification email
+      await credential.user?.sendEmailVerification();
+
       return credential.user;
     } catch (e) {
       debugPrint('Error signing up: $e');
@@ -44,51 +58,99 @@ class AuthService {
     }
   }
 
-  // Sign in anonymously (Guest)
-  Future<User?> signInAnonymously() async {
-    try {
-      final credential = await _auth.signInAnonymously();
-      return credential.user;
-    } catch (e) {
-      debugPrint('Error signing in anonymously: $e');
-      rethrow;
-    }
-  }
-
-  // Helper to get Google Credential
-  Future<AuthCredential?> _getGoogleCredential() async {
-    // 1. Trigger Google Sign In flow
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) return null; // User canceled
-
-    // 2. Obtain the auth details from the request
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
-
-    // 3. Create a new credential
-    return GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-  }
-
-  // Sign in with Google
-  Future<User?> signInWithGoogle() async {
+  // ─── Google Sign In (handles both sign-up and sign-in) ───
+  Future<GoogleSignInResult> signInWithGoogle() async {
     try {
       final credential = await _getGoogleCredential();
-      if (credential == null) return null;
+      if (credential == null) {
+        return GoogleSignInResult(user: null, isNewUser: false);
+      }
 
-      // 4. Sign in to Firebase with the credential
-      final UserCredential userCredential =
-          await _auth.signInWithCredential(credential);
-      return userCredential.user;
+      try {
+        final userCredential = await _auth.signInWithCredential(credential);
+        final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+        return GoogleSignInResult(
+          user: userCredential.user,
+          isNewUser: isNewUser,
+        );
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'account-exists-with-different-credential') {
+          // Credential linking scenario — get email from Google account
+          final googleUser = _googleSignIn.currentUser;
+          final email = googleUser?.email;
+          if (email != null) {
+            final linked = await _linkGoogleCredential(email, credential);
+            if (linked != null) {
+              return GoogleSignInResult(user: linked, isNewUser: false);
+            }
+          }
+        }
+        rethrow;
+      }
     } catch (e) {
       debugPrint('Error signing in with Google: $e');
       rethrow;
     }
   }
 
-  // Generic Re-authentication
+  // ─── Credential Linking ───
+  /// Links Google credential to existing email/password account
+  Future<User?> _linkGoogleCredential(
+      String email, AuthCredential googleCredential) async {
+    try {
+      // The user has an existing account with a different provider.
+      // In V2, we tell the UI to prompt the user to sign in with their
+      // existing password first, then link the Google credential.
+      debugPrint('User has existing account for $email — prompting to link');
+      throw FirebaseAuthException(
+        code: 'requires-password-link',
+        message:
+            'This email is already registered with a password. Please sign in with your password first to link Google.',
+      );
+    } catch (e) {
+      debugPrint('Error linking Google credential: $e');
+      rethrow;
+    }
+  }
+
+  /// Link Google provider to current user (called after password sign-in)
+  Future<User?> linkCurrentUserWithGoogle() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('No user logged in');
+
+      final credential = await _getGoogleCredential();
+      if (credential == null) return null;
+
+      final result = await user.linkWithCredential(credential);
+      return result.user;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'provider-already-linked') {
+        debugPrint('Google already linked');
+        return _auth.currentUser;
+      }
+      rethrow;
+    } catch (e) {
+      debugPrint('Error linking Google: $e');
+      rethrow;
+    }
+  }
+
+  // ─── Helper: Get Google Credential ───
+  Future<AuthCredential?> _getGoogleCredential() async {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) return null;
+
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
+
+    return GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+  }
+
+  // ─── Re-authentication ───
   Future<void> reauthenticate({String? password}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('No user logged in');
@@ -118,53 +180,14 @@ class AuthService {
     }
 
     if (!reauthenticated) {
-      // If we are anonymous or no provider matched (e.g. password user but no password provided)
-      if (user.isAnonymous) return; // Anonymous users don't need strict re-auth
       if (password == null &&
           user.providerData.any((p) => p.providerId == 'password')) {
         throw Exception('Password required for re-authentication');
       }
-      // If we truly failed to find a way
-      if (!reauthenticated && !user.isAnonymous) {
-        // Fallback?
-      }
     }
   }
 
-  // Sign out
-  Future<void> signOut() async {
-    try {
-      await Future.wait([
-        _auth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
-    } catch (e) {
-      debugPrint('Error signing out: $e');
-      // Ensure Firebase sign out happens even if Google fails
-      await _auth.signOut();
-    }
-  }
-
-  // Reload user (useful for verifying email, etc.)
-  Future<void> reloadUser() async {
-    try {
-      await _auth.currentUser?.reload();
-    } catch (e) {
-      debugPrint('Error reloading user: $e');
-    }
-  }
-
-  // Delete account (Auth only)
-  Future<void> deleteAccount() async {
-    try {
-      await _auth.currentUser?.delete();
-    } catch (e) {
-      debugPrint('Error deleting auth account: $e');
-      rethrow;
-    }
-  }
-
-  // Re-authenticate with Email/Password
+  // ─── Re-authenticate with Email ───
   Future<void> reauthenticateWithEmail(String email, String password) async {
     try {
       final user = _auth.currentUser;
@@ -179,31 +202,39 @@ class AuthService {
     }
   }
 
-  // Update Email
-  Future<void> updateEmail(String newEmail) async {
+  // ─── Sign Out ───
+  Future<void> signOut() async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception('No user logged in');
-      await user.verifyBeforeUpdateEmail(newEmail);
+      await Future.wait([
+        _auth.signOut(),
+        _googleSignIn.signOut(),
+      ]);
     } catch (e) {
-      debugPrint('Error updating email: $e');
+      debugPrint('Error signing out: $e');
+      await _auth.signOut();
+    }
+  }
+
+  // ─── Reload User ───
+  Future<void> reloadUser() async {
+    try {
+      await _auth.currentUser?.reload();
+    } catch (e) {
+      debugPrint('Error reloading user: $e');
+    }
+  }
+
+  // ─── Delete Account ───
+  Future<void> deleteAccount() async {
+    try {
+      await _auth.currentUser?.delete();
+    } catch (e) {
+      debugPrint('Error deleting auth account: $e');
       rethrow;
     }
   }
 
-  // Update Password
-  Future<void> updatePassword(String newPassword) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) throw Exception('No user logged in');
-      await user.updatePassword(newPassword);
-    } catch (e) {
-      debugPrint('Error updating password: $e');
-      rethrow;
-    }
-  }
-
-  // Send Email Verification
+  // ─── Send Email Verification ───
   Future<void> sendEmailVerification() async {
     try {
       final user = _auth.currentUser;
@@ -215,4 +246,61 @@ class AuthService {
       rethrow;
     }
   }
+
+  // ─── Update Email ───
+  Future<void> updateEmail(String newEmail) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('No user logged in');
+      await user.verifyBeforeUpdateEmail(newEmail);
+    } catch (e) {
+      debugPrint('Error updating email: $e');
+      rethrow;
+    }
+  }
+
+  // ─── Update Password ───
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) throw Exception('No user logged in');
+      await user.updatePassword(newPassword);
+    } catch (e) {
+      debugPrint('Error updating password: $e');
+      rethrow;
+    }
+  }
+
+  // ─── Check if email is verified ───
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+
+  // ─── Check if user signed in with Google ───
+  bool get isGoogleUser =>
+      _auth.currentUser?.providerData
+          .any((p) => p.providerId == 'google.com') ??
+      false;
+
+  // ─── Check if user signed in with email/password ───
+  bool get isPasswordUser =>
+      _auth.currentUser?.providerData.any((p) => p.providerId == 'password') ??
+      false;
+}
+
+/// Result of Google sign-in indicating if the user is new
+class GoogleSignInResult {
+  final User? user;
+  final bool isNewUser;
+
+  GoogleSignInResult({this.user, required this.isNewUser});
+}
+
+/// Custom exception for Firebase Auth
+class FirebaseAuthException implements Exception {
+  final String code;
+  final String message;
+
+  FirebaseAuthException({required this.code, required this.message});
+
+  @override
+  String toString() => 'FirebaseAuthException($code): $message';
 }

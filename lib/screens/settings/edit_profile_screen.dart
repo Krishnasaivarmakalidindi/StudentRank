@@ -18,9 +18,6 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _bioController;
-  late TextEditingController _collegeController;
-  String? _educationLevel;
   bool _isLoading = false;
   final StorageService _storageService = StorageService();
 
@@ -29,16 +26,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     final user = context.read<AppProvider>().currentUser;
     _nameController = TextEditingController(text: user?.name ?? '');
-    _bioController = TextEditingController(text: user?.bio ?? '');
-    _collegeController = TextEditingController(text: user?.collegeName ?? '');
-    _educationLevel = user?.educationLevel;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _bioController.dispose();
-    _collegeController.dispose();
     super.dispose();
   }
 
@@ -100,7 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
 
       if (url != null) {
-        final updatedUser = user.copyWith(profileImageUrl: url);
+        final updatedUser = user.copyWith(photoUrl: url);
         await context.read<AppProvider>().updateUser(updatedUser);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -129,10 +121,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final updatedUser = user.copyWith(
         name: _nameController.text.trim(),
-        bio: _bioController.text.trim(),
-        collegeName: _collegeController.text.trim(),
-        educationLevel: _educationLevel,
-        profileCompleted: true,
       );
 
       await provider.updateUser(updatedUser);
@@ -192,10 +180,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       radius: 50,
                       backgroundColor:
                           Theme.of(context).colorScheme.surfaceContainerHighest,
-                      backgroundImage: user.profileImageUrl != null
-                          ? NetworkImage(user.profileImageUrl!)
+                      backgroundImage: user.photoUrl != null
+                          ? NetworkImage(user.photoUrl!)
                           : null,
-                      child: user.profileImageUrl == null
+                      child: user.photoUrl == null
                           ? Icon(Icons.person,
                               size: 50,
                               color: Theme.of(context)
@@ -238,48 +226,95 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _educationLevel,
-                decoration: const InputDecoration(
-                  labelText: 'Education Level',
-                  prefixIcon: Icon(Icons.school_outlined),
+
+              // Academic info (read-only preview)
+              if (user.branch != null) ...[
+                _buildInfoTile(
+                  icon: Icons.account_tree_rounded,
+                  label: 'Branch',
+                  value: user.branch!,
                 ),
-                items: [
-                  'High School',
-                  'Undergraduate',
-                  'Postgraduate',
-                  'PhD',
-                  'Other'
-                ]
-                    .map((level) =>
-                        DropdownMenuItem(value: level, child: Text(level)))
-                    .toList(),
-                onChanged: (value) => setState(() => _educationLevel = value),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _collegeController,
-                decoration: const InputDecoration(
-                  labelText: 'College / University (Optional)',
-                  prefixIcon: Icon(Icons.account_balance_outlined),
+              ],
+              if (user.year != null) ...[
+                _buildInfoTile(
+                  icon: Icons.calendar_today_rounded,
+                  label: 'Year / Semester',
+                  value: 'Year ${user.year} • Semester ${user.semester ?? '-'}',
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _bioController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  alignLabelWithHint: true,
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.only(bottom: 48),
-                    child: Icon(Icons.edit_outlined),
+              ],
+
+              if (user.branch != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          user.canUpdateAcademicIdentity
+                              ? 'Academic identity can be updated from Settings.'
+                              : '${user.daysUntilAcademicUnlock} days until academic identity can be updated.',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                maxLength: 150,
-              ),
+              ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon,
+                size: 20,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                const SizedBox(height: 2),
+                Text(value, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -29,10 +29,8 @@ class VerificationStatusScreen extends StatelessWidget {
             context,
             'Email Verification',
             'Verify your email address to secure your account.',
-            isCompleted: user.email != null &&
-                !user.isGuest &&
-                !user.isDemo, // Basic check
-            action: user.email != null && !user.isGuest && !user.isDemo
+            isCompleted: user.email != null && !user.isGuest && user.isVerified,
+            action: user.isVerified
                 ? null
                 : TextButton(onPressed: () {}, child: const Text('Verify')),
           ),
@@ -98,11 +96,7 @@ class VerificationStatusScreen extends StatelessWidget {
     Color statusColor = Theme.of(context).colorScheme.primary;
     IconData statusIcon = Icons.account_circle;
 
-    if (user.isDemo) {
-      accountType = 'Demo Account';
-      statusColor = Colors.orange;
-      statusIcon = Icons.science;
-    } else if (user.isGuest) {
+    if (user.isGuest) {
       accountType = 'Guest Account';
       statusColor = Colors.grey;
       statusIcon = Icons.person_outline;

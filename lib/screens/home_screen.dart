@@ -115,11 +115,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 // 3. Reputation Card
                 ReputationCard(
                   reputationScore: user.reputationScore,
-                  rank: user.collegeRank,
-                  level: user.level,
-                  subject: user.subjects.isNotEmpty
-                      ? user.subjects.first
-                      : 'General',
+                  rank: user.reputationScore, // Campus rank placeholder
+                  level: (user.reputationScore ~/ 1000) + 1,
+                  subject: user.branch ?? 'General',
                 ),
 
                 const SizedBox(height: 32),

@@ -172,8 +172,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       FutureBuilder(
-                        future: _userService.getTopContributors(
-                            subject: _selectedSubject, limit: 5),
+                        future: _userService.getTopContributors(limit: 5),
                         builder: (context, snapshot) {
                           // Show minimal skeleton or mock if no data
                           // Since UserService might return empty list initially, we can show nothing or a placeholder
@@ -228,13 +227,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                                   .colorScheme
                                                   .primaryContainer,
                                               backgroundImage:
-                                                  contributor.profileImageUrl !=
-                                                          null
-                                                      ? NetworkImage(contributor
-                                                          .profileImageUrl!)
+                                                  contributor.photoUrl != null
+                                                      ? NetworkImage(
+                                                          contributor.photoUrl!)
                                                       : null,
-                                              child: contributor
-                                                          .profileImageUrl ==
+                                              child: contributor.photoUrl ==
                                                       null
                                                   ? Text(
                                                       contributor.name

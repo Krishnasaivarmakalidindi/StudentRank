@@ -37,9 +37,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildThemeOption(context, 'System Default', ThemeMode.system, provider),
-                _buildThemeOption(context, 'Light Mode', ThemeMode.light, provider),
-                _buildThemeOption(context, 'Dark Mode', ThemeMode.dark, provider),
+                _buildThemeOption(
+                    context, 'System Default', ThemeMode.system, provider),
+                _buildThemeOption(
+                    context, 'Light Mode', ThemeMode.light, provider),
+                _buildThemeOption(
+                    context, 'Dark Mode', ThemeMode.dark, provider),
               ],
             ),
           );
@@ -48,21 +51,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildThemeOption(
-    BuildContext context, 
-    String title, 
-    ThemeMode mode, 
-    AppProvider provider
-  ) {
+  Widget _buildThemeOption(BuildContext context, String title, ThemeMode mode,
+      AppProvider provider) {
     final isSelected = provider.themeMode == mode;
     return ListTile(
       title: Text(title),
       leading: Icon(
-        mode == ThemeMode.light ? Icons.light_mode : 
-        mode == ThemeMode.dark ? Icons.dark_mode : Icons.settings_brightness,
-        color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+        mode == ThemeMode.light
+            ? Icons.light_mode
+            : mode == ThemeMode.dark
+                ? Icons.dark_mode
+                : Icons.settings_brightness,
+        color: isSelected
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.onSurfaceVariant,
       ),
-      trailing: isSelected ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary) : null,
+      trailing: isSelected
+          ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+          : null,
       onTap: () {
         provider.setThemeMode(mode);
         Navigator.pop(context);
@@ -85,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final user = provider.currentUser;
-    final isDemoOrGuest = user?.isDemo == true || user?.isGuest == true;
+    final isDemoOrGuest = user?.isGuest == true;
 
     return Scaffold(
       appBar: const StudentRankAppBar(title: 'Settings'),
@@ -99,18 +105,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildTile(context, Icons.person_outline, 'Edit Profile', () {
                 context.go('/settings/edit-profile');
               }),
-              _buildTile(context, Icons.verified_user, 'Verification Status', () {
-                 context.go('/settings/verification');
+              _buildTile(context, Icons.verified_user, 'Verification Status',
+                  () {
+                context.go('/settings/verification');
               }),
               _buildTile(
-                context, 
-                Icons.email_outlined, 
-                'Change Email', 
+                context,
+                Icons.email_outlined,
+                'Change Email',
                 () {
                   context.go('/settings/change-email');
                 },
                 enabled: !isDemoOrGuest,
-                subtitle: isDemoOrGuest ? 'Not available for guest accounts' : null,
+                subtitle:
+                    isDemoOrGuest ? 'Not available for guest accounts' : null,
               ),
             ],
           ),
@@ -119,9 +127,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             'Privacy & Security',
             [
-              _buildTile(context, Icons.lock_outline, 'Privacy Controls', () => context.go('/settings/privacy')),
-              _buildTile(context, Icons.visibility_outlined, 'Profile Visibility', () => context.go('/settings/privacy')),
-              _buildTile(context, Icons.security, 'Security', () => context.go('/settings/security')),
+              _buildTile(context, Icons.lock_outline, 'Privacy Controls',
+                  () => context.go('/settings/privacy')),
+              _buildTile(context, Icons.visibility_outlined,
+                  'Profile Visibility', () => context.go('/settings/privacy')),
+              _buildTile(context, Icons.security, 'Security',
+                  () => context.go('/settings/security')),
             ],
           ),
           const SizedBox(height: 24),
@@ -129,8 +140,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             'Notifications',
             [
-              _buildTile(context, Icons.notifications_outlined, 'Push Notifications', () => context.go('/settings/notifications')),
-              _buildTile(context, Icons.email_outlined, 'Email Notifications', () => context.go('/settings/notifications')),
+              _buildTile(
+                  context,
+                  Icons.notifications_outlined,
+                  'Push Notifications',
+                  () => context.go('/settings/notifications')),
+              _buildTile(context, Icons.email_outlined, 'Email Notifications',
+                  () => context.go('/settings/notifications')),
             ],
           ),
           const SizedBox(height: 24),
@@ -138,9 +154,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             'App',
             [
-              _buildTile(context, Icons.palette_outlined, 'Theme', () => _showThemeBottomSheet(context), trailingText: _getThemeName(provider.themeMode)),
-              _buildTile(context, Icons.language, 'Language', () => context.go('/settings/language'), trailingText: 'English'),
-              _buildTile(context, Icons.info_outline, 'About', () => context.go('/settings/about')),
+              _buildTile(context, Icons.palette_outlined, 'Theme',
+                  () => _showThemeBottomSheet(context),
+                  trailingText: _getThemeName(provider.themeMode)),
+              _buildTile(context, Icons.language, 'Language',
+                  () => context.go('/settings/language'),
+                  trailingText: 'English'),
+              _buildTile(context, Icons.info_outline, 'About',
+                  () => context.go('/settings/about')),
             ],
           ),
           const SizedBox(height: 24),
@@ -148,9 +169,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             'Support',
             [
-              _buildTile(context, Icons.help_outline, 'Help Center', () => context.go('/settings/help')),
-              _buildTile(context, Icons.feedback_outlined, 'Send Feedback', () => _launchEmail('Feedback for StudentRank')),
-              _buildTile(context, Icons.bug_report_outlined, 'Report Bug', () => _launchEmail('Bug Report')),
+              _buildTile(context, Icons.help_outline, 'Help Center',
+                  () => context.go('/settings/help')),
+              _buildTile(context, Icons.feedback_outlined, 'Send Feedback',
+                  () => _launchEmail('Feedback for StudentRank')),
+              _buildTile(context, Icons.bug_report_outlined, 'Report Bug',
+                  () => _launchEmail('Bug Report')),
             ],
           ),
           const SizedBox(height: 24),
@@ -171,7 +195,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Navigator.pop(context);
                         await context.read<AppProvider>().signOut();
                       },
-                      child: Text('Sign Out', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                      child: Text('Sign Out',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)),
                     ),
                   ],
                 ),
@@ -193,19 +219,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _getThemeName(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system: return 'System';
-      case ThemeMode.light: return 'Light';
-      case ThemeMode.dark: return 'Dark';
+      case ThemeMode.system:
+        return 'System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
     }
   }
 
-  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
+  Widget _buildSection(
+      BuildContext context, String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 16, bottom: 12),
-          child: Text(title, style: context.textStyles.titleSmall?.semiBold.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          child: Text(title,
+              style: context.textStyles.titleSmall?.semiBold.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ),
         Container(
           decoration: BoxDecoration(
@@ -222,7 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   child,
                   if (!isLast)
-                    Divider(height: 1, color: Theme.of(context).colorScheme.outline),
+                    Divider(
+                        height: 1,
+                        color: Theme.of(context).colorScheme.outline),
                 ],
               );
             }).toList(),
@@ -233,26 +267,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildTile(
-    BuildContext context, 
-    IconData icon, 
-    String title, 
+    BuildContext context,
+    IconData icon,
+    String title,
     VoidCallback onTap, {
     String? trailingText,
     bool enabled = true,
     String? subtitle,
   }) {
     return ListTile(
-      leading: Icon(icon, color: enabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).disabledColor),
-      title: Text(title, style: TextStyle(color: enabled ? Theme.of(context).colorScheme.onSurface : Theme.of(context).disabledColor)),
-      subtitle: subtitle != null ? Text(subtitle, style: TextStyle(color: Theme.of(context).disabledColor)) : null,
+      leading: Icon(icon,
+          color: enabled
+              ? Theme.of(context).colorScheme.onSurface
+              : Theme.of(context).disabledColor),
+      title: Text(title,
+          style: TextStyle(
+              color: enabled
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).disabledColor)),
+      subtitle: subtitle != null
+          ? Text(subtitle,
+              style: TextStyle(color: Theme.of(context).disabledColor))
+          : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailingText != null) ...[
-            Text(trailingText, style: context.textStyles.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            Text(trailingText,
+                style: context.textStyles.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(width: 8),
           ],
-          Icon(Icons.chevron_right, color: enabled ? Theme.of(context).colorScheme.onSurfaceVariant : Theme.of(context).disabledColor),
+          Icon(Icons.chevron_right,
+              color: enabled
+                  ? Theme.of(context).colorScheme.onSurfaceVariant
+                  : Theme.of(context).disabledColor),
         ],
       ),
       onTap: enabled ? onTap : null,

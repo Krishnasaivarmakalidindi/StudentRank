@@ -105,10 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 radius: 56,
                                 backgroundColor:
                                     theme.colorScheme.primaryContainer,
-                                backgroundImage: user.profileImageUrl != null
-                                    ? NetworkImage(user.profileImageUrl!)
+                                backgroundImage: user.photoUrl != null
+                                    ? NetworkImage(user.photoUrl!)
                                     : null,
-                                child: user.profileImageUrl == null
+                                child: user.photoUrl == null
                                     ? Text(
                                         user.name.substring(0, 1).toUpperCase(),
                                         style: context
@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           // College & Joined Date
                           const SizedBox(height: 4),
                           Text(
-                            user.collegeName ?? 'No College Set',
+                            user.branch ?? 'NIAT Student',
                             style: context.textStyles.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant),
                           ),
@@ -167,16 +167,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     .withValues(alpha: 0.7)),
                           ),
 
-                          // Bio
-                          if (user.bio != null && user.bio!.isNotEmpty) ...[
+                          // Academic info
+                          if (user.year != null && user.semester != null) ...[
                             const SizedBox(height: 12),
                             Text(
-                              user.bio!,
+                              'Year ${user.year} • Semester ${user.semester}',
                               style: context.textStyles.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurface),
                               textAlign: TextAlign.center,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ],
@@ -234,7 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                                     ),
                                   ),
                                   Text(
-                                    'Lvl ${user.level}',
+                                    'Lvl ${(user.reputationScore ~/ 1000) + 1}',
                                     style: context.textStyles.titleMedium?.bold,
                                   ),
                                 ],
@@ -277,8 +275,8 @@ class _ProfileScreenState extends State<ProfileScreen>
             controller: _tabController,
             children: [
               _buildActivityTab(user.id),
-              _buildBadgesTab(user.badges),
-              _buildSubjectsTab(user.subjects),
+              _buildBadgesTab(const []),
+              _buildSubjectsTab(user.branch != null ? [user.branch!] : []),
             ],
           ),
         ),

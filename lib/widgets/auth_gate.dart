@@ -2,11 +2,20 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:studentrank/providers/app_provider.dart';
+import 'package:studentrank/screens/academic_onboarding_screen.dart';
 import 'package:studentrank/screens/auth_screen.dart';
 import 'package:studentrank/screens/splash_screen.dart';
 import 'package:studentrank/screens/verify_email_screen.dart';
 import 'package:studentrank/screens/main_screen.dart';
 
+/// AuthGate — Central navigation controller for authentication flow.
+///
+/// Flow:
+/// 1. Splash (loading / branding)
+/// 2. Not authenticated → AuthScreen
+/// 3. Authenticated but email not verified → VerifyEmailScreen
+/// 4. Authenticated + verified but no profile/onboarding → AcademicOnboardingScreen
+/// 5. Fully set up → MainScreen
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
@@ -15,18 +24,16 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
-  bool _showSplashEvent = true;
+  bool _showSplash = true;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    // Enforce minimum splash time for branding/animation
+    // Minimum splash duration for branding
     _timer = Timer(const Duration(seconds: 2), () {
       if (mounted) {
-        setState(() {
-          _showSplashEvent = false;
-        });
+        setState(() => _showSplash = false);
       }
     });
   }
@@ -41,35 +48,44 @@ class _AuthGateState extends State<AuthGate> {
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(
       builder: (context, provider, child) {
-        // 1. Show Splash if enforcing min duration OR app is loading auth state
-        if (_showSplashEvent || provider.isLoading) {
+        // 1. Splash — loading or enforcing min duration
+        if (_showSplash || provider.isLoading) {
           return const SplashScreen();
         }
 
-        // 2. If not authenticated -> AuthScreen / Welcome
+        // 2. Not authenticated → Auth Screen
         if (!provider.isAuthenticated) {
           return const AuthScreen();
         }
 
-        // 3. Authenticated but no user doc (Zombie/Recovery)
-        // Provider handles recovery, so if _currentUser is null here implies failure or strict loading
-        if (provider.currentUser == null) {
-          // Keep showing splash or a specific loading/error screen
+        // 3. Authenticated but user doc loading or recovery
+        if (provider.currentUser == null && !provider.needsOnboarding) {
           return const SplashScreen();
         }
 
-        // 4. Verification Check
-        // If not guest and not verified, show verification screen
-        if (!provider.currentUser!.isGuest &&
-            !provider.currentUser!.isVerified) {
-          return const VerifyEmailScreen();
+        // 4. Email not verified (email/password users only)
+        //    Google users are auto-verified
+        if (provider.currentUser != null &&
+            !provider.currentUser!.isVerified &&
+            !provider.currentUser!.isGuest) {
+          // Check if this is an email/password user
+          if (provider.isPasswordAuth && !provider.isGoogleAuth) {
+            return const VerifyEmailScreen();
+          }
         }
 
-        // 5. Authenticated & Verified -> Main App
-        // Navigate to the main functionality
-        // We return the Nav/Main screen directly here.
-        // If we want to change URL, we would do it in initState or listener,
-        // but for AuthGate as the root widget, returning the widget is clean.
+        // 5. Needs academic onboarding (first-time users)
+        if (provider.needsOnboarding) {
+          return const AcademicOnboardingScreen();
+        }
+
+        // Also check profileCompleted on the user object
+        if (provider.currentUser != null &&
+            !provider.currentUser!.profileCompleted) {
+          return const AcademicOnboardingScreen();
+        }
+
+        // 6. Fully authenticated and onboarded → Main App
         return const MainScreen();
       },
     );

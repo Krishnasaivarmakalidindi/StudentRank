@@ -4,22 +4,29 @@ class User {
   final String id;
   final String name;
   final String? email;
-  final String? collegeName;
-  final String? educationLevel; // School, UG, PG, Other
+  final String? photoUrl;
+
+  // NIAT Academic Identity
+  final String? campusId;
+  final String? branch;
+  final int? year;
+  final int? semester;
+
+  // Status flags
   final bool isVerified;
-  final bool isDemo;
+  final bool profileCompleted; // Academic onboarding done
   final bool isGuest;
-  final bool profileCompleted;
-  final String? profileImageUrl;
-  final String? bio;
+
+  // Reputation
   final int reputationScore;
-  final int collegeRank;
-  final int level;
-  final DateTime joinedDate;
-  final List<String> subjects;
-  final List<Badge> badges;
+
+  // Timestamps
   final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime lastLoginAt;
+  final DateTime?
+      academicUpdatedAt; // Track when academic fields were last changed
+
+  // Settings
   final Map<String, bool> privacySettings;
   final Map<String, bool> notificationSettings;
 
@@ -27,25 +34,21 @@ class User {
     required this.id,
     required this.name,
     this.email,
-    this.collegeName,
-    this.educationLevel,
+    this.photoUrl,
+    this.campusId,
+    this.branch,
+    this.year,
+    this.semester,
     this.isVerified = false,
-    this.isDemo = false,
-    this.isGuest = false,
     this.profileCompleted = false,
-    this.profileImageUrl,
-    this.bio,
+    this.isGuest = false,
     this.reputationScore = 0,
-    this.collegeRank = 0,
-    this.level = 1,
-    required this.joinedDate,
-    this.subjects = const [],
-    this.badges = const [],
     required this.createdAt,
-    required this.updatedAt,
+    required this.lastLoginAt,
+    this.academicUpdatedAt,
     this.privacySettings = const {
       'profileVisible': true,
-      'collegeOnly': false,
+      'campusOnly': false,
       'contributionsVisible': true,
     },
     this.notificationSettings = const {
@@ -61,22 +64,20 @@ class User {
         'id': id,
         'name': name,
         'email': email,
-        'collegeName': collegeName,
-        'educationLevel': educationLevel,
+        'photoUrl': photoUrl,
+        'campusId': campusId,
+        'branch': branch,
+        'year': year,
+        'semester': semester,
         'isVerified': isVerified,
-        'isDemo': isDemo,
-        'isGuest': isGuest,
         'profileCompleted': profileCompleted,
-        'profileImageUrl': profileImageUrl,
-        'bio': bio,
+        'isGuest': isGuest,
         'reputationScore': reputationScore,
-        'collegeRank': collegeRank,
-        'level': level,
-        'joinedDate': Timestamp.fromDate(joinedDate),
-        'subjects': subjects,
-        'badges': badges.map((b) => b.toJson()).toList(),
         'createdAt': Timestamp.fromDate(createdAt),
-        'updatedAt': Timestamp.fromDate(updatedAt),
+        'lastLoginAt': Timestamp.fromDate(lastLoginAt),
+        'academicUpdatedAt': academicUpdatedAt != null
+            ? Timestamp.fromDate(academicUpdatedAt!)
+            : null,
         'privacySettings': privacySettings,
         'notificationSettings': notificationSettings,
       };
@@ -88,41 +89,46 @@ class User {
       return DateTime.now();
     }
 
+    DateTime? parseDateTimeNullable(dynamic value) {
+      if (value == null) return null;
+      if (value is Timestamp) return value.toDate();
+      if (value is String) return DateTime.tryParse(value);
+      return null;
+    }
+
     return User(
       id: json['id'] as String,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? 'Student',
       email: json['email'] as String?,
-      collegeName: json['collegeName'] as String?,
-      educationLevel: json['educationLevel'] as String?,
+      photoUrl: json['photoUrl'] as String?,
+      campusId: json['campusId'] as String?,
+      branch: json['branch'] as String?,
+      year: json['year'] as int?,
+      semester: json['semester'] as int?,
       isVerified: json['isVerified'] as bool? ?? false,
-      isDemo: json['isDemo'] as bool? ?? false,
-      isGuest: json['isGuest'] as bool? ?? false,
       profileCompleted: json['profileCompleted'] as bool? ?? false,
-      profileImageUrl: json['profileImageUrl'] as String?,
-      bio: json['bio'] as String?,
+      isGuest: json['isGuest'] as bool? ?? false,
       reputationScore: json['reputationScore'] as int? ?? 0,
-      collegeRank: json['collegeRank'] as int? ?? 0,
-      level: json['level'] as int? ?? 1,
-      joinedDate: parseDateTime(json['joinedDate']),
-      subjects: (json['subjects'] as List?)?.cast<String>() ?? [],
-      badges: (json['badges'] as List?)
-              ?.map((b) => Badge.fromJson(b as Map<String, dynamic>))
-              .toList() ??
-          [],
       createdAt: parseDateTime(json['createdAt']),
-      updatedAt: parseDateTime(json['updatedAt']),
-      privacySettings: (json['privacySettings'] as Map<String, dynamic>?)?.cast<String, bool>() ?? {
-        'profileVisible': true,
-        'collegeOnly': false,
-        'contributionsVisible': true,
-      },
-      notificationSettings: (json['notificationSettings'] as Map<String, dynamic>?)?.cast<String, bool>() ?? {
-        'pushActivity': true,
-        'pushReputation': true,
-        'pushGroups': true,
-        'emailSummaries': true,
-        'emailAlerts': true,
-      },
+      lastLoginAt: parseDateTime(json['lastLoginAt']),
+      academicUpdatedAt: parseDateTimeNullable(json['academicUpdatedAt']),
+      privacySettings: (json['privacySettings'] as Map<String, dynamic>?)
+              ?.cast<String, bool>() ??
+          {
+            'profileVisible': true,
+            'campusOnly': false,
+            'contributionsVisible': true,
+          },
+      notificationSettings:
+          (json['notificationSettings'] as Map<String, dynamic>?)
+                  ?.cast<String, bool>() ??
+              {
+                'pushActivity': true,
+                'pushReputation': true,
+                'pushGroups': true,
+                'emailSummaries': true,
+                'emailAlerts': true,
+              },
     );
   }
 
@@ -130,22 +136,18 @@ class User {
     String? id,
     String? name,
     String? email,
-    String? collegeName,
-    String? educationLevel,
+    String? photoUrl,
+    String? campusId,
+    String? branch,
+    int? year,
+    int? semester,
     bool? isVerified,
-    bool? isDemo,
-    bool? isGuest,
     bool? profileCompleted,
-    String? profileImageUrl,
-    String? bio,
+    bool? isGuest,
     int? reputationScore,
-    int? collegeRank,
-    int? level,
-    DateTime? joinedDate,
-    List<String>? subjects,
-    List<Badge>? badges,
     DateTime? createdAt,
-    DateTime? updatedAt,
+    DateTime? lastLoginAt,
+    DateTime? academicUpdatedAt,
     Map<String, bool>? privacySettings,
     Map<String, bool>? notificationSettings,
   }) =>
@@ -153,67 +155,31 @@ class User {
         id: id ?? this.id,
         name: name ?? this.name,
         email: email ?? this.email,
-        collegeName: collegeName ?? this.collegeName,
-        educationLevel: educationLevel ?? this.educationLevel,
+        photoUrl: photoUrl ?? this.photoUrl,
+        campusId: campusId ?? this.campusId,
+        branch: branch ?? this.branch,
+        year: year ?? this.year,
+        semester: semester ?? this.semester,
         isVerified: isVerified ?? this.isVerified,
-        isDemo: isDemo ?? this.isDemo,
-        isGuest: isGuest ?? this.isGuest,
         profileCompleted: profileCompleted ?? this.profileCompleted,
-        profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-        bio: bio ?? this.bio,
+        isGuest: isGuest ?? this.isGuest,
         reputationScore: reputationScore ?? this.reputationScore,
-        collegeRank: collegeRank ?? this.collegeRank,
-        level: level ?? this.level,
-        joinedDate: joinedDate ?? this.joinedDate,
-        subjects: subjects ?? this.subjects,
-        badges: badges ?? this.badges,
         createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
+        lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+        academicUpdatedAt: academicUpdatedAt ?? this.academicUpdatedAt,
         privacySettings: privacySettings ?? this.privacySettings,
         notificationSettings: notificationSettings ?? this.notificationSettings,
       );
-}
 
-class Badge {
-  final String id;
-  final String name;
-  final String description;
-  final String iconName;
-  final DateTime earnedDate;
-  final String? subject;
+  /// Check if academic identity can be updated (30-day lock)
+  bool get canUpdateAcademicIdentity {
+    if (academicUpdatedAt == null) return true;
+    return DateTime.now().difference(academicUpdatedAt!).inDays >= 30;
+  }
 
-  Badge({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.iconName,
-    required this.earnedDate,
-    this.subject,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'iconName': iconName,
-        'earnedDate': Timestamp.fromDate(earnedDate),
-        'subject': subject,
-      };
-
-  factory Badge.fromJson(Map<String, dynamic> json) {
-    DateTime parseDateTime(dynamic value) {
-      if (value is Timestamp) return value.toDate();
-      if (value is String) return DateTime.parse(value);
-      return DateTime.now();
-    }
-
-    return Badge(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      iconName: json['iconName'] as String,
-      earnedDate: parseDateTime(json['earnedDate']),
-      subject: json['subject'] as String?,
-    );
+  /// Days remaining until academic identity can be updated
+  int get daysUntilAcademicUnlock {
+    if (canUpdateAcademicIdentity) return 0;
+    return 30 - DateTime.now().difference(academicUpdatedAt!).inDays;
   }
 }

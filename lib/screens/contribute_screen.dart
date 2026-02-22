@@ -717,25 +717,21 @@ class _ContributeScreenState extends State<ContributeScreen> {
         updatedAt: DateTime.now(),
       );
 
-      if (user.isDemo) {
-        await Future.delayed(const Duration(seconds: 1));
-      } else {
-        await _resourceService.uploadResource(resource);
+      await _resourceService.uploadResource(resource);
 
-        final activity = Activity(
-          id: const Uuid().v4(),
-          userId: user.id,
-          type: ActivityType.upload,
-          title: 'Uploaded ${resource.title}',
-          description: 'Contributed to ${resource.subject}',
-          reputationChange: _estimatedReputation,
-          resourceId: resource.id,
-          createdAt: DateTime.now(),
-        );
+      final activity = Activity(
+        id: const Uuid().v4(),
+        userId: user.id,
+        type: ActivityType.upload,
+        title: 'Uploaded ${resource.title}',
+        description: 'Contributed to ${resource.subject}',
+        reputationChange: _estimatedReputation,
+        resourceId: resource.id,
+        createdAt: DateTime.now(),
+      );
 
-        await _activityService.addActivity(activity);
-        await appProvider.updateReputationScore(_estimatedReputation);
-      }
+      await _activityService.addActivity(activity);
+      await appProvider.updateReputationScore(_estimatedReputation);
 
       if (!mounted) return;
 

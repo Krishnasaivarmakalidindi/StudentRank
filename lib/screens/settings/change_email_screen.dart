@@ -60,7 +60,7 @@ class _ChangeEmailScreenState extends State<ChangeEmailScreen> {
     final user = context.watch<AppProvider>().currentUser;
     if (user == null) return const SizedBox.shrink();
 
-    if (user.isGuest || user.isDemo) {
+    if (user.isGuest) {
       return Scaffold(
         appBar: const StudentRankAppBar(title: 'Change Email'),
         body: Center(
