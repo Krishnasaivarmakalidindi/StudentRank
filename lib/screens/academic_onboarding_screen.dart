@@ -256,7 +256,7 @@ class _AcademicOnboardingScreenState extends State<AcademicOnboardingScreen>
                   icon: Icons.apartment_rounded,
                   label: 'NIAT Campus',
                   child: DropdownButtonFormField<Campus>(
-                    value: _selectedCampus,
+                    initialValue: _selectedCampus,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
@@ -289,7 +289,7 @@ class _AcademicOnboardingScreenState extends State<AcademicOnboardingScreen>
                   icon: Icons.account_tree_rounded,
                   label: 'Branch',
                   child: DropdownButtonFormField<String>(
-                    value: _selectedBranch,
+                    initialValue: _selectedBranch,
                     isExpanded: true,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
@@ -318,7 +318,7 @@ class _AcademicOnboardingScreenState extends State<AcademicOnboardingScreen>
                         icon: Icons.calendar_today_rounded,
                         label: 'Year',
                         child: DropdownButtonFormField<int>(
-                          value: _selectedYear,
+                          initialValue: _selectedYear,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
@@ -344,7 +344,7 @@ class _AcademicOnboardingScreenState extends State<AcademicOnboardingScreen>
                         icon: Icons.view_timeline_rounded,
                         label: 'Semester',
                         child: DropdownButtonFormField<int>(
-                          value: _selectedSemester,
+                          initialValue: _selectedSemester,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
