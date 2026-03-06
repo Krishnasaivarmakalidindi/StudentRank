@@ -19,6 +19,7 @@ class _AuthScreenState extends State<AuthScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
 
   // State
@@ -45,6 +46,7 @@ class _AuthScreenState extends State<AuthScreen>
 
     _emailController.addListener(_clearError);
     _passwordController.addListener(_clearError);
+    _confirmPasswordController.addListener(_clearError);
   }
 
   void _clearError() {
@@ -58,6 +60,7 @@ class _AuthScreenState extends State<AuthScreen>
     _animController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _nameController.dispose();
     super.dispose();
   }
@@ -569,7 +572,7 @@ class _AuthScreenState extends State<AuthScreen>
                 controller: _passwordController,
                 validator: ValidationService.validatePassword,
                 obscureText: !_isPasswordVisible,
-                textInputAction: TextInputAction.done,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -585,10 +588,46 @@ class _AuthScreenState extends State<AuthScreen>
                     onPressed: () => setState(
                         () => _isPasswordVisible = !_isPasswordVisible),
                   ),
-                  helperText: 'Minimum 6 characters',
+                  helperText:
+                      'Min 8 chars, 1 uppercase, 1 number, 1 special char',
+                  helperMaxLines: 2,
                   helperStyle: TextStyle(
                     color: theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm Password
+              TextFormField(
+                controller: _confirmPasswordController,
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (val != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+                obscureText: !_isPasswordVisible,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _handleEmailSignUp(),
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        size: 20),
+                    onPressed: () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible),
                   ),
                 ),
               ),

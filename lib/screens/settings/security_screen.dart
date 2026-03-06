@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/theme.dart';
 import 'package:studentrank/widgets/student_rank_app_bar.dart';
+import 'package:studentrank/services/validation_service.dart';
 
 class SecurityScreen extends StatefulWidget {
   const SecurityScreen({super.key});
@@ -177,13 +178,7 @@ class _SecurityScreenState extends State<SecurityScreen> {
                               setState(() => _obscureNew = !_obscureNew),
                         ),
                       ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) return 'Required';
-                        if (v.length < 6) {
-                          return 'Must be at least 6 characters';
-                        }
-                        return null;
-                      },
+                      validator: ValidationService.validatePassword,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
