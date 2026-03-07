@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:studentrank/providers/app_provider.dart';
-import 'package:studentrank/screens/academic_onboarding_screen.dart';
-import 'package:studentrank/screens/auth_screen.dart';
+import 'package:studentrank/screens/auth/academic_onboarding_screen.dart';
+import 'package:studentrank/screens/auth/auth_screen.dart';
 import 'package:studentrank/screens/splash_screen.dart';
-import 'package:studentrank/screens/verify_email_screen.dart';
+import 'package:studentrank/screens/auth/verify_email_screen.dart';
 import 'package:studentrank/screens/main_screen.dart';
 
 /// AuthGate — Central navigation controller for authentication flow.

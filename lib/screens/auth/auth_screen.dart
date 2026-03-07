@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/services/validation_service.dart';
+import 'package:studentrank/screens/auth/create_account_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -334,7 +335,14 @@ class _AuthScreenState extends State<AuthScreen>
           width: double.infinity,
           height: 52,
           child: OutlinedButton.icon(
-            onPressed: () => _switchMode(_AuthMode.signUp),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CreateAccountScreen(),
+                ),
+              );
+            },
             icon: const Icon(Icons.email_outlined, size: 20),
             label: const Text('Sign up with Email'),
             style: OutlinedButton.styleFrom(

@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:studentrank/providers/app_provider.dart';
-import 'package:studentrank/screens/auth_screen.dart';
+import 'package:studentrank/screens/auth/auth_screen.dart';
 // SplashScreen import removed as it's not used directly anymore (used in AuthGate)
-import 'package:studentrank/screens/welcome_screen.dart';
+import 'package:studentrank/screens/auth/welcome_screen.dart';
 import 'package:studentrank/screens/main_screen.dart';
 import 'package:studentrank/screens/contribute_screen.dart';
 import 'package:studentrank/screens/resource_detail_screen.dart';
