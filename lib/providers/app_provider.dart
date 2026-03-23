@@ -42,6 +42,7 @@ class AppProvider extends ChangeNotifier {
       } else {
         _themeMode = ThemeMode.light;
       }
+      notifyListeners();
     } catch (e) {
       debugPrint('Error loading theme: $e');
     }

@@ -48,6 +48,7 @@ class _AuthScreenState extends State<AuthScreen>
     _emailController.addListener(_clearError);
     _passwordController.addListener(_clearError);
     _confirmPasswordController.addListener(_clearError);
+    _nameController.addListener(_clearError);
   }
 
   void _clearError() {
