@@ -36,13 +36,26 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppContent extends StatelessWidget {
+class MyAppContent extends StatefulWidget {
   const MyAppContent({super.key});
 
   @override
+  State<MyAppContent> createState() => _MyAppContentState();
+}
+
+class _MyAppContentState extends State<MyAppContent> {
+  late final _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final appProvider = context.read<AppProvider>();
+    _router = AppRouter.createRouter(appProvider);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final appProvider = Provider.of<AppProvider>(context);
-    final router = AppRouter.createRouter(appProvider);
+    final appProvider = context.watch<AppProvider>();
 
     return MaterialApp.router(
       title: 'StudentRank',
@@ -50,7 +63,7 @@ class MyAppContent extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appProvider.themeMode,
-      routerConfig: router,
+      routerConfig: _router,
     );
   }
 }

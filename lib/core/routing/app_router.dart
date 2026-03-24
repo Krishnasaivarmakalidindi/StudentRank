@@ -130,9 +130,10 @@ class AppRouter {
         // We only need to protect other routes if somehow accessed directly
 
         final isLoggedIn = appProvider.isAuthenticated;
-        final isAuthRoute = state.matchedLocation == AppRoutes.auth ||
-            state.matchedLocation == AppRoutes.welcome ||
-            state.matchedLocation == AppRoutes.splash;
+        final currentPath = state.uri.path;
+        final isAuthRoute = currentPath == AppRoutes.auth ||
+            currentPath == AppRoutes.welcome ||
+            currentPath == AppRoutes.splash;
 
         // If trying to access protected route (anything not in isAuthRoute)
         // and not logged in, redirect to auth/welcome
