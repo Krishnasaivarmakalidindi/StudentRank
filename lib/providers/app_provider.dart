@@ -113,12 +113,6 @@ class AppProvider extends ChangeNotifier {
     try {
       final authUser = await _authService.signInWithEmail(email, password);
 
-      // Block access if email not verified
-      if (authUser != null && !authUser.emailVerified) {
-        // Don't sign them out — they need to verify
-        throw Exception(
-            'Please verify your email before signing in. Check your inbox.');
-      }
       // Auth listener handles the rest
     } catch (e) {
       rethrow;
@@ -141,7 +135,7 @@ class AppProvider extends ChangeNotifier {
         id: authUser.uid,
         name: name,
         email: email,
-        isVerified: false,
+        isVerified: true,
         profileCompleted: false,
         reputationScore: 0,
         createdAt: DateTime.now(),
@@ -151,7 +145,7 @@ class AppProvider extends ChangeNotifier {
       await _userService.createUser(newUser);
 
       _currentUser = newUser;
-      _needsOnboarding = false; // They need to verify email first
+      _needsOnboarding = true; // Go straight to onboarding
       notifyListeners();
     } catch (e) {
       rethrow;

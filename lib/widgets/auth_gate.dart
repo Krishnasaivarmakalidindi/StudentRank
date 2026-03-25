@@ -5,7 +5,7 @@ import 'package:studentrank/providers/app_provider.dart';
 import 'package:studentrank/screens/auth/academic_onboarding_screen.dart';
 import 'package:studentrank/screens/auth/auth_screen.dart';
 import 'package:studentrank/screens/splash_screen.dart';
-import 'package:studentrank/screens/auth/verify_email_screen.dart';
+
 import 'package:studentrank/screens/main_screen.dart';
 
 /// AuthGate — Central navigation controller for authentication flow.
@@ -63,16 +63,7 @@ class _AuthGateState extends State<AuthGate> {
           return const SplashScreen();
         }
 
-        // 4. Email not verified (email/password users only)
-        //    Google users are auto-verified
-        if (provider.currentUser != null &&
-            !provider.currentUser!.isVerified &&
-            !provider.currentUser!.isGuest) {
-          // Check if this is an email/password user
-          if (provider.isPasswordAuth && !provider.isGoogleAuth) {
-            return const VerifyEmailScreen();
-          }
-        }
+
 
         // 5. Needs academic onboarding (first-time users)
         if (provider.needsOnboarding) {

@@ -24,11 +24,6 @@ class AuthService {
         password: password,
       );
 
-      // Block unverified email users
-      if (credential.user != null && !credential.user!.emailVerified) {
-        return credential.user;
-      }
-
       return credential.user;
     } catch (e) {
       debugPrint('Error signing in: $e');
@@ -47,9 +42,6 @@ class AuthService {
 
       // Set display name
       await credential.user?.updateDisplayName(name);
-
-      // Send verification email
-      await credential.user?.sendEmailVerification();
 
       return credential.user;
     } catch (e) {

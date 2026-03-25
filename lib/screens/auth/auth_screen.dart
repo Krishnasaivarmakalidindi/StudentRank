@@ -661,14 +661,7 @@ class _AuthScreenState extends State<AuthScreen>
               ),
               const SizedBox(height: 12),
 
-              Text(
-                'A verification email will be sent to your inbox.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 20),
+
 
               // Already have account
               Row(
