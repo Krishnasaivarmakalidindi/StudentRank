@@ -17,12 +17,12 @@ class CampusService {
       final snapshot = await _firestore
           .collection(_campusesCollection)
           .where('isActive', isEqualTo: true)
-          .orderBy('name')
           .get();
 
       _cachedCampuses = snapshot.docs
           .map((doc) => Campus.fromJson(doc.data(), doc.id))
-          .toList();
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
 
       return _cachedCampuses!;
     } catch (e) {
